@@ -2,7 +2,8 @@ FROM tiangolo/uvicorn-gunicorn:python3.11
 
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./entrypoint.sh /tmp/entrypoint.sh
-COPY ./src /app
+COPY ./src /app/src
+COPY ./tests /app/tests
 
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
