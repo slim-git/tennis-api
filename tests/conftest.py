@@ -25,3 +25,15 @@ def simple_match_pairwise_data(simple_match: pd.DataFrame):
         'diffPoints': [1960, -1960],
         'target': [1, 0]
     })
+
+@pytest.fixture
+def simple_match_empty():
+    return pd.DataFrame({
+        'Series': [],
+        'Surface': [],
+        'Court': [],
+        'Round': [],
+        'diffRanking': [],
+        'diffPoints': [],
+        'target': []
+    })
