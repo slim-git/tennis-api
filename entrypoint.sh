@@ -1,4 +1,4 @@
 #!/bin/bash
 
 # Run the API
-uvicorn main:app --host 0.0.0.0 --port 7860
+uvicorn src.main:app --host 0.0.0.0 --port 7860
