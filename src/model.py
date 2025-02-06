@@ -150,7 +150,7 @@ def preprocess_data(df: pd.DataFrame) -> Tuple:
     y = df_model['target']
 
     # Split the data
-    return train_test_split(X, y, test_size=0.2, random_state=42)
+    return train_test_split(X, y, test_size=0.2)
 
 def evaluate_model(pipeline: Pipeline, X_test: pd.DataFrame, y_test: pd.Series) -> Dict:
     """
@@ -269,7 +269,7 @@ def run_experiment(
         )
 
     # Print timing
-    print(f"...Training Done! --- Total training time: {time.time() - start_time} seconds")
+    logging.info(f"...Training Done! --- Total training time: {time.time() - start_time} seconds")
 
 def list_registered_models() -> List[Dict]:
     """
@@ -291,8 +291,6 @@ def list_registered_models() -> List[Dict]:
 def load_model(name: str, version: str = 'latest') -> Pipeline:
     """
     Load a model from MLflow
-
-    Args:
     """
     if name in models.keys():
         return models[name]

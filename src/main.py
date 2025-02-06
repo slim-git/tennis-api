@@ -171,7 +171,7 @@ async def make_prediction(params: Annotated[ModelInput, Query()]
         series=params.series
     )
 
-    print(prediction)
+    logging.info(prediction)
 
     return prediction
 
