@@ -16,5 +16,5 @@ jobs:
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HUGGING_FACE_TOKEN }}
-          HF_USERNAME: ${{ variables.HF_USERNAME }}
+          HF_USERNAME: ${{ vars.HF_USERNAME }}
         run: git push --force https://$HF_USERNAME:$HUGGING_FACE_TOKEN@huggingface.co/spaces/$HF_USERNAME/tennis-api main
