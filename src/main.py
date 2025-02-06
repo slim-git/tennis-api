@@ -20,14 +20,14 @@ from starlette.status import HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
 from dotenv import load_dotenv
 from mlflow.exceptions import RestException
 
-from model import (
+from src.model import (
     run_experiment,
     train_model_from_scratch,
     predict,
     list_registered_models,
     load_model
 )
-from sql import _get_connection
+from src.sql import _get_connection
 
 # ------------------------------------------------------------------------------
 

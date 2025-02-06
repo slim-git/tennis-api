@@ -16,8 +16,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix
 
-from sql import load_matches_from_postgres
-from enums import Feature
+from src.sql import load_matches_from_postgres
+from src.enums import Feature
 
 load_dotenv()
 
