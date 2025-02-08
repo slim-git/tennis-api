@@ -52,3 +52,23 @@ def load_matches_from_postgres(
     data = pd.DataFrame(data, columns=[desc[0] for desc in cursor.description])
 
     return data
+
+def list_tournaments(circuit: Literal["atp", "wta"]):
+    """
+    List the tournaments of the circuit
+    """
+    query = f"""
+        SELECT DISTINCT
+            tournament,
+            series
+            court,
+            surface
+        FROM {circuit}_data;
+    """
+
+    with _get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(query)
+            tournaments = [row[0] for row in cursor.fetchall()]
+
+    return tournaments
