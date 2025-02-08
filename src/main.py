@@ -184,7 +184,14 @@ async def list_available_models():
     """
     return list_registered_models()
 
-@app.get("/{circuit}/tournaments", tags=["reference"], description="List the tournaments of the circuit")
+
+class Tournament(BaseModel):
+    name: str = Field(description="The tournament's name.", example='Wimbledon')
+    series: Literal['ATP250', 'ATP500', 'Grand Slam', 'Masters 1000', 'Masters', 'Masters Cup', 'International Gold', 'International'] = 'Grand Slam'
+    court: Literal['Outdoor', 'Indoor'] = 'Outdoor'
+    surface: Literal['Grass', 'Carpet', 'Clay', 'Hard'] = 'Grass'
+
+@app.get("/{circuit}/tournaments", tags=["reference"], description="List the tournaments of the circuit", response_model=list[Tournament])
 async def list_tournaments(circuit: Literal["atp", "wta"]):
     """
     List the tournaments of the circuit

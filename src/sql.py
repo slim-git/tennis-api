@@ -59,16 +59,15 @@ def list_tournaments(circuit: Literal["atp", "wta"]):
     """
     query = f"""
         SELECT DISTINCT
-            tournament,
-            series
+            tournament as name,
+            series,
             court,
             surface
         FROM {circuit}_data;
     """
-
     with _get_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute(query)
-            tournaments = [row[0] for row in cursor.fetchall()]
+            tournaments = [{'name': row[0], 'series': row[1], 'court': row[2], 'surface': row[3]} for row in cursor.fetchall()]
 
     return tournaments
