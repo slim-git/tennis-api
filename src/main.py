@@ -27,7 +27,10 @@ from src.model import (
     list_registered_models,
     load_model
 )
-from src.sql import _get_connection
+from src.sql import (
+    _get_connection,
+    list_tournaments as _list_tournaments,
+)
 
 # ------------------------------------------------------------------------------
 
@@ -133,8 +136,7 @@ class ModelOutput(BaseModel):
          tags=["model"],
          description="Predict the outcome of a tennis match",
          response_model=ModelOutput)
-async def make_prediction(params: Annotated[ModelInput, Query()]
-):
+async def make_prediction(params: Annotated[ModelInput, Query()]):
     """
     Predict the matches
     """
@@ -181,6 +183,13 @@ async def list_available_models():
     List the available models
     """
     return list_registered_models()
+
+@app.get("/{circuit}/tournaments", tags=["reference"], description="List the tournaments of the circuit")
+async def list_tournaments(circuit: Literal["atp", "wta"]):
+    """
+    List the tournaments of the circuit
+    """
+    return _list_tournaments(circuit)
 
 @app.get("/check_health", tags=["general"], description="Check the health of the API")
 async def check_health():
