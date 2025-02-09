@@ -31,6 +31,7 @@ from src.sql import (
     _get_connection,
     list_tournaments as _list_tournaments,
     list_players as _list_players,
+    get_player_last_ranking as _get_player_last_ranking
 )
 
 # ------------------------------------------------------------------------------
@@ -192,7 +193,10 @@ class Tournament(BaseModel):
     court: Literal['Outdoor', 'Indoor'] = 'Outdoor'
     surface: Literal['Grass', 'Carpet', 'Clay', 'Hard'] = 'Grass'
 
-@app.get("/{circuit}/tournaments", tags=["reference"], description="List the tournaments of the circuit", response_model=list[Tournament])
+@app.get("/{circuit}/tournaments",
+         tags=["reference"],
+         description="List the tournaments of the circuit",
+         response_model=list[Tournament])
 async def list_tournaments(circuit: Literal["atp", "wta"]):
     """
     List the tournaments of the circuit
@@ -203,12 +207,31 @@ async def list_tournaments(circuit: Literal["atp", "wta"]):
 class Player(BaseModel):
     name: str = Field(description="The player's name.", example='Djokovic N.')
 
-@app.get("/{circuit}/players", tags=["reference"], description="List the players of the circuit", response_model=list[Player])
+@app.get("/{circuit}/players",
+         tags=["reference"],
+         description="List the players of the circuit",
+         response_model=list[Player])
 async def list_players(circuit: Literal["atp", "wta"]):
     """
     List the players of the circuit
     """
     return _list_players(circuit)
+
+
+class PlayerInfo(BaseModel):
+    name: str = Field(description="The player's name.", example='Federer R.')
+    ranking: Optional[int] = Field(description="The player's last known ranking.", example=8)
+    points: Optional[int] = Field(description="The player's last known number of points.", example=4815)
+
+@app.get("/{circuit}/player_last_ranking",
+         tags=["reference"],
+         description="Get the last ranking and points of the player",
+         response_model=PlayerInfo)
+async def get_player_last_ranking(circuit: Literal["atp", "wta"], player: str):
+    """
+    Get the last ranking and points of the player
+    """
+    return _get_player_last_ranking(circuit, player)
 
 @app.get("/check_health", tags=["general"], description="Check the health of the API")
 async def check_health():

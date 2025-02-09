@@ -83,3 +83,23 @@ def list_players(circuit: Literal["atp", "wta"]):
             players = [{'name': row[0]} for row in cursor.fetchall()]
 
     return players
+
+def get_player_last_ranking(circuit: Literal["atp", "wta"], player: str):
+    """
+    Get the last ranking and points of the player
+    """
+    query = f"""
+        SELECT
+            CASE WHEN winner = %s THEN w_rank ELSE l_rank END as ranking,
+            CASE WHEN winner = %s THEN w_points ELSE l_points END as points
+        FROM {circuit}_data
+        WHERE
+            winner = %s OR loser = %s
+        ORDER BY date DESC LIMIT 1"""
+    
+    with _get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(query, (player, player, player, player,))
+            ranking, points = cursor.fetchone()
+
+    return {"name": player, "ranking": ranking, "points": points}
