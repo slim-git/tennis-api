@@ -71,3 +71,15 @@ def list_tournaments(circuit: Literal["atp", "wta"]):
             tournaments = [{'name': row[0], 'series': row[1], 'court': row[2], 'surface': row[3]} for row in cursor.fetchall()]
 
     return tournaments
+
+def list_players(circuit: Literal["atp", "wta"]):
+    """
+    List the players of the circuit
+    """
+    query = f"SELECT DISTINCT winner FROM {circuit}_data"
+    with _get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(query)
+            players = [{'name': row[0]} for row in cursor.fetchall()]
+
+    return players

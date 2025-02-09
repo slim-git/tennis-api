@@ -30,6 +30,7 @@ from src.model import (
 from src.sql import (
     _get_connection,
     list_tournaments as _list_tournaments,
+    list_players as _list_players,
 )
 
 # ------------------------------------------------------------------------------
@@ -197,6 +198,17 @@ async def list_tournaments(circuit: Literal["atp", "wta"]):
     List the tournaments of the circuit
     """
     return _list_tournaments(circuit)
+
+
+class Player(BaseModel):
+    name: str = Field(description="The player's name.", example='Djokovic N.')
+
+@app.get("/{circuit}/players", tags=["reference"], description="List the players of the circuit", response_model=list[Player])
+async def list_players(circuit: Literal["atp", "wta"]):
+    """
+    List the players of the circuit
+    """
+    return _list_players(circuit)
 
 @app.get("/check_health", tags=["general"], description="Check the health of the API")
 async def check_health():
