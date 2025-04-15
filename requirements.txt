@@ -1,0 +1,10 @@
+python-dotenv
+fastapi
+psycopg2-binary
+pandas
+scikit-learn
+openpyxl
+xlrd >= 2.0.1
+mlflow
+boto3
+pytest
