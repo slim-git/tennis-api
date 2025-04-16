@@ -175,3 +175,6 @@ cython_debug/
 
 .DS_Store
 *.bck
+
+# VSCode config files
+.vscode/
