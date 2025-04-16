@@ -1,0 +1,2 @@
+# This file is used to install the development dependencies for the project.
+pytest==8.3.5
