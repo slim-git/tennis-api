@@ -13,7 +13,7 @@ pipeline {
             steps {
                 script {
                     // Build the Docker image using the Dockerfile
-                    sh 'docker build -t tennis_api .'
+                    sh 'docker build --build-arg TEST=true -t tennis_api .'
                 }
             }
         }
