@@ -16,7 +16,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix
 
-from src.sql import load_matches_from_postgres
+from src.repository.sql import load_matches_from_postgres
 from src.enums import Feature
 
 load_dotenv()
@@ -279,7 +279,6 @@ def list_registered_models() -> List[Dict]:
     tracking_uri = os.environ.get("MLFLOW_SERVER_URI")
     if tracking_uri is None:
         raise ValueError("MLFLOW_SERVER_URI environment variable is not set.")
-    print(f"MLflow tracking URI: {tracking_uri}")
 
     client = MlflowClient(tracking_uri=tracking_uri)
     # Should be:

@@ -12,11 +12,17 @@ from fastapi import (
     Security,
     Depends
 )
+from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.background import BackgroundTasks
-from fastapi.responses import RedirectResponse
 from fastapi.security.api_key import APIKeyHeader
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_403_FORBIDDEN,
+    HTTP_404_NOT_FOUND,
+    HTTP_503_SERVICE_UNAVAILABLE)
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
-from starlette.status import HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
 from dotenv import load_dotenv
 from mlflow.exceptions import RestException
 
@@ -27,10 +33,8 @@ from src.model import (
     list_registered_models,
     load_model
 )
-from src.sql import (
-    _get_connection,
-    list_tournaments as _list_tournaments,
-)
+from src.repository.common import get_session
+from src.repository.sql import list_tournaments as _list_tournaments
 
 # ------------------------------------------------------------------------------
 
@@ -198,25 +202,17 @@ async def list_tournaments(circuit: Literal["atp", "wta"]):
     """
     return _list_tournaments(circuit)
 
+# ------------------------------------------------------------------------------
 @app.get("/check_health", tags=["general"], description="Check the health of the API")
-async def check_health():
+async def check_health(session: Annotated[Session, Depends(get_session)]):
     """
     Check all the services in the infrastructure are working
     """
-    healthy = 0
-    unhealthy = 1
-
-    # DB check
-    db_status = False
+    # Check if the database is alive
     try:
-        with _get_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("SELECT 1")
-                db_status = True
-    except Exception:
-        pass
-
-    if db_status:
-        return healthy
-    else:
-        return unhealthy
+        session.execute(text("SELECT 1"))
+    except Exception as e:
+        logging.error(f"DB check failed: {e}")
+        return JSONResponse(content={"status": "unhealthy"}, status_code=HTTP_503_SERVICE_UNAVAILABLE)
+    
+    return JSONResponse(content={"status": "healthy"}, status_code=HTTP_200_OK)

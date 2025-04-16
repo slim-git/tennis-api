@@ -24,12 +24,7 @@ pipeline {
                     string(credentialsId: 'MLFLOW_SERVER_URI', variable: 'MLFLOW_SERVER_URI'),
                     string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'),
                     string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY'),
-                    string(credentialsId: 'PG_USER', variable: 'PG_USER'),
-                    string(credentialsId: 'PG_PASSWORD', variable: 'PG_PASSWORD'),
-                    string(credentialsId: 'PG_HOST', variable: 'PG_HOST'),
-                    string(credentialsId: 'PG_PORT', variable: 'PG_PORT'),
-                    string(credentialsId: 'PG_DB', variable: 'PG_DB'),
-                    string(credentialsId: 'PG_SSLMODE', variable: 'PG_SSLMODE')
+                    string(credentialsId: 'DATABASE_URL', variable: 'DATABASE_URL')
                 ]) {
                     // Write environment variables to a temporary file
                     // KEEP SINGLE QUOTE FOR SECURITY PURPOSES (MORE INFO HERE: https://www.jenkins.io/doc/book/pipeline/jenkinsfile/#handling-credentials)
@@ -38,12 +33,7 @@ pipeline {
                         MLFLOW_SERVER_URI=${MLFLOW_SERVER_URI}
                         AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
                         AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                        PG_USER=${PG_USER}
-                        PG_PASSWORD=${PG_PASSWORD}
-                        PG_HOST=${PG_HOST}
-                        PG_PORT=${PG_PORT}
-                        PG_DB=${PG_DB}
-                        PG_SSLMODE=${PG_SSLMODE}
+                        DATABASE_URL=${DATABASE_URL}
                         '''
                     }
 
