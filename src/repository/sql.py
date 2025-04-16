@@ -17,7 +17,10 @@ def load_matches_from_postgres(
     if not from_date:
         from_date = "1900-01-01"
     
-    query = f"SELECT * FROM {table_name} WHERE date BETWEEN :from_date AND :to_date"
+    query = f"""SELECT * FROM {table_name} 
+    WHERE 
+        date BETWEEN :from_date AND :to_date
+        AND comment = 'Completed'"""
     query_params = {'from_date': from_date, 'to_date': to_date}
 
     with next(get_session()) as session:
