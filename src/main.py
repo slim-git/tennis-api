@@ -36,6 +36,8 @@ from src.model import (
 from src.repository.common import get_session
 from src.repository.sql import list_tournaments as _list_tournaments
 
+logger = logging.getLogger(__name__)
+
 # ------------------------------------------------------------------------------
 
 load_dotenv()
@@ -156,7 +158,7 @@ async def make_prediction(params: Annotated[ModelInput, Query()]):
         try:
             pipeline = load_model(params.model, params.version)
         except RestException as e:
-            logging.error(e)
+            logger.error(e)
 
             # Return HTTP error 404
             return HTTPException(
@@ -177,7 +179,7 @@ async def make_prediction(params: Annotated[ModelInput, Query()]):
         series=params.series
     )
 
-    logging.info(prediction)
+    logger.info(prediction)
 
     return prediction
 
@@ -212,7 +214,7 @@ async def check_health(session: Annotated[Session, Depends(get_session)]):
     try:
         session.execute(text("SELECT 1"))
     except Exception as e:
-        logging.error(f"DB check failed: {e}")
+        logger.error(f"DB check failed: {e}")
         return JSONResponse(content={"status": "unhealthy"}, status_code=HTTP_503_SERVICE_UNAVAILABLE)
     
     return JSONResponse(content={"status": "healthy"}, status_code=HTTP_200_OK)
