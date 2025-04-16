@@ -276,10 +276,17 @@ def list_registered_models() -> List[Dict]:
     List all the registered models
     """
     # Set tracking URI to your Heroku application
-    mlflow.set_tracking_uri(os.environ["MLFLOW_SERVER_URI"])
-    
-    # Return the list of registered models
-    results = mlflow.search_registered_models()
+    tracking_uri = os.environ.get("MLFLOW_SERVER_URI")
+    if tracking_uri is None:
+        raise ValueError("MLFLOW_SERVER_URI environment variable is not set.")
+    print(f"MLflow tracking URI: {tracking_uri}")
+
+    client = MlflowClient(tracking_uri=tracking_uri)
+    # Should be:
+    #   results = client.search_registered_models()
+    # but this is not working from inside the container
+    # so we need to use the store client to get the registered models
+    results = client._get_registry_client().store.search_registered_models()
 
     output = []
     for res in results:

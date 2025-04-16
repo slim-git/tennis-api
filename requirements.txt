@@ -1,10 +1,11 @@
-python-dotenv
-fastapi
-psycopg2-binary
-pandas
-scikit-learn
-openpyxl
-xlrd >= 2.0.1
-mlflow
-boto3
-pytest
+python-dotenv==1.1.0
+fastapi==0.115.12
+psycopg2-binary==2.9.10
+pandas==2.2.3
+scikit-learn==1.6.1
+openpyxl==3.1.5
+xlrd==2.0.1
+mlflow-skinny==2.21.3
+boto3==1.37.34
+uvicorn==0.34.1
+gunicorn==23.0.0
