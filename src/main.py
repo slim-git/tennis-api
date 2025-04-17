@@ -19,12 +19,14 @@ from starlette.status import (
     HTTP_200_OK,
     HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
+    HTTP_422_UNPROCESSABLE_ENTITY,
     HTTP_503_SERVICE_UNAVAILABLE)
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from dotenv import load_dotenv
 from mlflow.exceptions import RestException
+from sqlalchemy.exc import IntegrityError
 
 from src.model import (
     run_experiment,
@@ -35,6 +37,7 @@ from src.model import (
 )
 from src.repository.common import get_session
 from src.repository.sql import list_tournaments as _list_tournaments
+from src.service.match import insert_new_match
 
 logger = logging.getLogger(__name__)
 
@@ -203,6 +206,65 @@ async def list_tournaments(circuit: Literal["atp", "wta"]):
     List the tournaments of the circuit
     """
     return _list_tournaments(circuit)
+
+class RawMatch(BaseModel):
+    Comment: Literal['Completed', 'Retired', 'Walkover'] = 'Completed'
+    Loser: str = Field(description="The name of the loser.", example='Djokovic N.')
+    Winner: str = Field(description="The name of the winner.", example='Federer R.')
+    Round: Literal['1st Round', '2nd Round', '3nd Round', '4th Round', 'Quarterfinals', 'Semifinals', 'The Final', 'Round Robin'] = '1st Round'
+    Court: Literal['Outdoor', 'Indoor'] = 'Outdoor'
+    Surface: Literal['Grass', 'Carpet', 'Clay', 'Hard'] = 'Grass'
+    Wsets: int = Field(description="The number of sets won by the winner.", example=3)
+    Lsets: int = Field(description="The number of sets won by the loser.", example=0)
+    Date: str = Field(description="The date of the match.", example='2019-06-15')
+    WRank: int = Field(description="The rank of the winner.", example=1)
+    WPts: int = Field(description="The number of points of the winner.", example=4000)
+    LPts: int = Field(description="The number of points of the loser.", example=3000)
+    LRank: int = Field(description="The rank of the loser.", example=2)
+    Location: str = Field(description="The location of the tournament.", example='London')
+    Series: Literal['ATP250', 'ATP500', 'Grand Slam', 'Masters 1000', 'Masters', 'Masters Cup', 'International Gold', 'International'] = 'Grand Slam'
+    W1: Optional[int] = Field(description="The score of the winner in the first set.", example=6)
+    W2: Optional[int] = Field(description="The score of the winner in the second set.", example=6)
+    W3: Optional[int] = Field(description="The score of the winner in the third set.", example=6)
+    W4: Optional[int] = Field(description="The score of the winner in the fourth set.", example=None)
+    W5: Optional[int] = Field(description="The score of the winner in the fifth set.", example=None)
+    L1: Optional[int] = Field(description="The score of the loser in the first set.", example=3)
+    L2: Optional[int] = Field(description="The score of the loser in the second set.", example=2)
+    L3: Optional[int] = Field(description="The score of the loser in the third set.", example=0)
+    L4: Optional[int] = Field(description="The score of the loser in the fourth set.", example=None)
+    L5: Optional[int] = Field(description="The score of the loser in the fifth set.", example=None)
+    Tournament: str = Field(description="The name of the tournament.", example='Wimbledon')
+    Location: str = Field(description="The location of the tournament.", example='London')
+    # Best_of: str = Field(description="The number of sets to win the match.", example=3)
+    
+    Config = ConfigDict(extra="allow")
+
+@app.post("/match/insert", tags=["match"], description="Insert a match into the database")
+async def insert_match(
+    raw_match: RawMatch,
+    session: Annotated[Session, Depends(get_session)]
+):
+    """
+    Insert a match into the database
+    """
+    try:
+        match = insert_new_match(
+            db=session,
+            raw_match=raw_match.model_dump(exclude_unset=True)
+        )
+    except IntegrityError as e:
+        logger.error(f"Error inserting match: {e}")
+        raise HTTPException(
+            status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Entity already exists in the database"
+        )
+
+    output = {
+        "status": "ok",
+        "match_id": match.id,
+    }
+
+    return JSONResponse(content=output, status_code=HTTP_200_OK)
 
 # ------------------------------------------------------------------------------
 @app.get("/check_health", tags=["general"], description="Check the health of the API")
