@@ -266,6 +266,37 @@ async def insert_match(
 
     return JSONResponse(content=output, status_code=HTTP_200_OK)
 
+
+@app.post("/batch/match/insert", tags=["match"], description="Insert a batch of matches into the database")
+async def insert_batch_match(
+    raw_matches: list[RawMatch],
+    session: Annotated[Session, Depends(get_session)]
+):
+    """
+    Insert a batch of matches into the database
+    """
+    matches = []
+    for raw_match in raw_matches:
+        try:
+            match = insert_new_match(
+                db=session,
+                raw_match=raw_match.model_dump(exclude_unset=True)
+            )
+            matches.append(match)
+        except IntegrityError as e:
+            logger.error(f"Error inserting match: {e}")
+            raise HTTPException(
+                status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Entity already exists in the database"
+            )
+
+    output = {
+        "status": "ok",
+        "match_ids": [match.id for match in matches],
+    }
+
+    return JSONResponse(content=output, status_code=HTTP_200_OK)
+
 # ------------------------------------------------------------------------------
 @app.get("/check_health", tags=["general"], description="Check the health of the API")
 async def check_health(session: Annotated[Session, Depends(get_session)]):
