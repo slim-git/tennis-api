@@ -1,5 +1,6 @@
 import pytest
 import pandas as pd
+from typing import Dict
 
 @pytest.fixture
 def simple_match():
@@ -37,3 +38,82 @@ def simple_match_empty():
         'diffPoints': [],
         'target': []
     })
+
+@pytest.fixture
+def raw_match():
+    return {
+        "Comment": "Completed",
+        "Best of": 3,
+        "Loser": "Djokovic N.",
+        "Round": "Final",
+        "Winner": "Federer R.",
+        "Court": "Outdoor",
+        "Surface": "Grass",
+        "Wsets": 3,
+        "Lsets": 0,
+        "Date": "2019-06-15",
+        "WRank": 1,
+        "WPts": 4000,
+        "LPts": 3000,
+        "Tournament": "Wimbledon",
+        "LRank": 2,
+        "Location": "London",
+        "Series": "Grand Slam",
+        "W1": 6,
+        "W2": 6,
+        "W3": 6,
+        "W4": None,
+        "W5": None,
+        "L1": 3,
+        "L2": 2,
+        "L3": 0,
+        "L4": None,
+        "L5": None,
+        "AvgW": 1.3,
+        "AvgL": 2.3,
+        "MaxW": 1.5,
+        "MaxL": 1.8,
+        "B365W": 1.2,
+        "B365L": 4.5,
+    }
+
+@pytest.fixture
+def raw_matches_batch(raw_match: Dict):
+    return [
+        raw_match,
+        {
+            "Comment": "Completed",
+            "Best of": 3,
+            "Loser": "Nadal R.",
+            "Round": "Final",
+            "Winner": "Djokovic N.",
+            "Court": "Outdoor",
+            "Surface": "Hard",
+            "Wsets": 3,
+            "Lsets": 0,
+            "Date": "2022-01-21",
+            "WRank": 1,
+            "WPts": 4000,
+            "LPts": 3000,
+            "Tournament": "Australian Open",
+            "LRank": 2,
+            "Location": "Melbourne",
+            "Series": "Grand Slam",
+            "W1": 6,
+            "W2": 6,
+            "W3": 6,
+            "W4": None,
+            "W5": None,
+            "L1": 3,
+            "L2": 2,
+            "L3": 0,
+            "L4": None,
+            "L5": None,
+            "AvgW": 1.3,
+            "AvgL": 2.3,
+            "MaxW": 1.5,
+            "MaxL": 1.8,
+            "B365W": 1.2,
+            "B365L": 4.5,
+        }
+    ]
