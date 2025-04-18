@@ -1,4 +1,3 @@
-
 from sqlalchemy import String, Float, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 

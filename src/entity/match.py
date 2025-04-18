@@ -1,4 +1,3 @@
-
 from sqlalchemy import Integer, String, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from src.entity.odds import Odds

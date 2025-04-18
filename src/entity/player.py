@@ -1,6 +1,6 @@
 
 from datetime import date
-from sqlalchemy import String, Float, ForeignKey
+from sqlalchemy import Integer, String, ForeignKey
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from typing import List
 
@@ -32,11 +32,15 @@ class Caracteristics(Base):
 
     # Caracteristics table columns
     id: Mapped[int] = mapped_column(primary_key=True)
-    height: Mapped[float] = mapped_column(Float, nullable=True)
-    weight: Mapped[float] = mapped_column(Float, nullable=True)
-    handedness: Mapped[str] = mapped_column(String, nullable=True)
+    nationality: Mapped[str] = mapped_column(String, nullable=True)
+    last_name: Mapped[str] = mapped_column(String, nullable=True)
+    first_name: Mapped[str] = mapped_column(String, nullable=True)
+    play_hand: Mapped[str] = mapped_column(String, nullable=True)
+    back_hand: Mapped[int] = mapped_column(Integer, nullable=True)
+    height_cm: Mapped[int] = mapped_column(Integer, nullable=True)
+    weight_kg: Mapped[int] = mapped_column(Integer, nullable=True)
     date_of_birth: Mapped[date] = mapped_column(String, nullable=True)
-    date_turned_pro: Mapped[date] = mapped_column(String, nullable=True)
+    pro_year: Mapped[Integer] = mapped_column(Integer, nullable=True)
 
     fk_player_id: Mapped[int] = mapped_column(ForeignKey("data.player.id", ondelete="CASCADE", name='caracteristics_fk_player_id_fkey'), nullable=False)
     player: Mapped["Player"] = relationship("Player", back_populates="caracteristics")
