@@ -4,6 +4,7 @@ from src.entity.match import Match
 from src.entity.odds import Odds
 from src.entity.player import Player
 from src.repository import match_repo
+from src.jobs.player import schedule_player_details
 
 def get_match(raw_match: Dict) -> Match:
     """
@@ -85,4 +86,17 @@ def insert_new_match(db: Session, raw_match: Dict) -> Match:
     match = parse_raw_match(raw_match)
     match_repo.insert_match(db, match)
 
+    # Schedule tasks to fetch player details
+    if _should_fetch_details(match.winner):
+        schedule_player_details(match.winner.name)
+
+    if _should_fetch_details(match.loser):
+        schedule_player_details(match.loser.name)
+
     return match
+
+def _should_fetch_details(player: Player) -> bool:
+    """
+    Check if player details should be fetched
+    """
+    return player.tennis_id is None or player.caracteristics is None
