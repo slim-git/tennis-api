@@ -2,7 +2,7 @@ import os
 import joblib
 import logging
 import secrets
-from typing import Literal, Optional, Annotated
+from typing import Literal, Optional, Annotated, ClassVar
 from datetime import datetime
 from fastapi import (
     FastAPI,
@@ -237,7 +237,7 @@ class RawMatch(BaseModel):
     Location: str = Field(description="The location of the tournament.", example='London')
     # Best_of: str = Field(description="The number of sets to win the match.", example=3)
     
-    Config = ConfigDict(extra="allow")
+    model_config: ClassVar[ConfigDict] = ConfigDict(extra="allow")
 
 @app.post("/match/insert", tags=["match"], description="Insert a match into the database")
 async def insert_match(
