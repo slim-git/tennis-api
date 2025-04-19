@@ -14,7 +14,7 @@ def search_player(raw_name: str) -> List[Dict]:
     last_name = " ".join(raw_name.split(" ")[:-1])
 
     # Construct the URL for the ATP Tour search
-    url = f"https://www.atptour.com/en/-/www/site-search/{last_name}/"
+    url = f"https://www.atptour.com/en/-/www/site-search/{last_name.lower()}/"
 
     # Ajax request to fetch player data
     headers = {
