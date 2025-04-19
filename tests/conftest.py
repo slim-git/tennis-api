@@ -1,6 +1,62 @@
 import pytest
 import pandas as pd
+import pkgutil
+import importlib
+import fakeredis
 from typing import Dict
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
+
+from src.entity import Base
+
+# Load all classes from src.entity
+module = importlib.import_module('src.entity')
+
+# Loop over all modules in the 'src.entity' package
+package = importlib.import_module('src.entity')
+
+for _, module_name, _ in pkgutil.walk_packages(package.__path__, package.__name__ + '.'):
+    module = importlib.import_module(module_name)
+
+@pytest.fixture
+def db_session(postgresql):
+    """
+    Create a new database session for each test
+    and tear it down after the test.
+    """
+    # Create a new database connection
+    host = postgresql.info.host
+    port = postgresql.info.port
+    user = postgresql.info.user
+    dbname = postgresql.info.dbname
+
+    dsn = f"postgresql+psycopg://{user}@{host}:{port}/{dbname}"
+    engine = create_engine(dsn, echo=True)
+
+    # Create schema and tables once
+    with engine.begin() as conn:
+        conn.execute(text("CREATE SCHEMA IF NOT EXISTS data"))
+    
+    Base.metadata.create_all(engine)
+
+    connection = engine.connect()
+    transaction = connection.begin()
+
+    SessionLocal = sessionmaker(bind=connection)
+    session = SessionLocal()
+
+    yield session
+
+    session.close()
+    transaction.rollback()
+    connection.close()
+
+# Use of fixture to inject a fake Redis client into the tests
+@pytest.fixture
+def fake_redis():
+    # Create a fake Redis instance
+    fake_redis_instance = fakeredis.FakeStrictRedis()
+    yield fake_redis_instance
 
 @pytest.fixture
 def simple_match():
@@ -117,3 +173,4 @@ def raw_matches_batch(raw_match: Dict):
             "B365L": 4.5,
         }
     ]
+
