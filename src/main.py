@@ -39,6 +39,8 @@ from src.repository.common import get_session
 from src.repository.sql import list_tournaments as _list_tournaments
 from src.service.match import insert_new_match
 
+logging.basicConfig(level=logging.INFO,
+                    handlers=[logging.StreamHandler()])
 logger = logging.getLogger(__name__)
 
 # ------------------------------------------------------------------------------
@@ -132,7 +134,7 @@ class ModelInput(BaseModel):
     points_player_2: int = Field(gt=0, default=500, description="The number of points of the 2nd player")
     court: Literal['Outdoor', 'Indoor'] = 'Outdoor'
     surface: Literal['Grass', 'Carpet', 'Clay', 'Hard'] = 'Clay'
-    round: Literal['1st Round', '2nd Round', '3nd Round', '4th Round', 'Quarterfinals', 'Semifinals', 'The Final', 'Round Robin'] = '1st Round'
+    round: Literal['1st Round', '2nd Round', '3rd Round', '4th Round', 'Quarterfinals', 'Semifinals', 'The Final', 'Round Robin'] = '1st Round'
     series: Literal['Grand Slam', 'Masters 1000', 'Masters', 'Masters Cup', 'ATP500', 'ATP250', 'International Gold', 'International'] = 'Grand Slam'
     model: Optional[str] = 'LogisticRegression'
     version: Optional[str] = 'latest'
@@ -211,7 +213,7 @@ class RawMatch(BaseModel):
     Comment: Literal['Completed', 'Retired', 'Walkover'] = 'Completed'
     Loser: str = Field(description="The name of the loser.", example='Djokovic N.')
     Winner: str = Field(description="The name of the winner.", example='Federer R.')
-    Round: Literal['1st Round', '2nd Round', '3nd Round', '4th Round', 'Quarterfinals', 'Semifinals', 'The Final', 'Round Robin'] = '1st Round'
+    Round: Literal['1st Round', '2nd Round', '3rd Round', '4th Round', 'Quarterfinals', 'Semifinals', 'The Final', 'Round Robin'] = '1st Round'
     Court: Literal['Outdoor', 'Indoor'] = 'Outdoor'
     Surface: Literal['Grass', 'Carpet', 'Clay', 'Hard'] = 'Grass'
     Wsets: int = Field(description="The number of sets won by the winner.", example=3)
