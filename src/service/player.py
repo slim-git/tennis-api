@@ -1,11 +1,10 @@
-from typing import Dict
 from sqlalchemy.orm import Session
 from src.entity.match import Match  # noqa: F401
 from src.entity.player import Player
 from src.repository import player_repo
 from src.service.scrapper import search_player, get_personal_details
 
-def fill_player_details(session: Session, player_raw_name: Dict) -> Player:
+def fill_player_details(session: Session, player_raw_name: str) -> Player:
     """
     """
     player = player_repo.find_player_by_name(db=session, name=player_raw_name)
