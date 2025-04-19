@@ -2,6 +2,7 @@ import pytest
 import pandas as pd
 import pkgutil
 import importlib
+import responses
 import fakeredis
 from typing import Dict
 from sqlalchemy import create_engine, text
@@ -60,6 +61,14 @@ def fake_redis():
     # Create a fake Redis instance
     fake_redis_instance = fakeredis.FakeStrictRedis()
     yield fake_redis_instance
+
+# -----------------------------------------------------------------
+# Fixtures for requests calls
+# -----------------------------------------------------------------
+@pytest.fixture(autouse=True)
+def mock_responses():
+    with responses.RequestsMock() as rsps:
+        yield rsps
 
 # ----------------------------------------------------------------
 # Fixtures for Match Data
