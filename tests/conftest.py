@@ -212,6 +212,37 @@ def super_joueur(db_session):
     return player
 
 @pytest.fixture
+def tout_nouveau_joueur(db_session):
+    """
+    Create a new player without caracteristics nor tennis_id and add it to the database
+    """
+    from src.entity.player import Player
+
+    player = Player(name="Joueur T.N.")
+
+    db_session.add(player)
+    db_session.commit()
+
+    return player
+
+@pytest.fixture
+def nouveau_joueur(db_session):
+    """
+    Create a new player without caracteristics and add it to the database
+    """
+    from src.entity.player import Player
+
+    player = Player(
+        name="Joueur N.",
+        tennis_id='J002',
+    )
+
+    db_session.add(player)
+    db_session.commit()
+
+    return player
+
+@pytest.fixture
 def roland_garros_final():
     """
     Create a Roland Garros final match with odds and new players
