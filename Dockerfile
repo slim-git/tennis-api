@@ -13,14 +13,23 @@ RUN pip install --upgrade pip && \
       pip install --no-cache-dir -r requirements-dev.txt; \
     fi
 
-# Installer curl pour le healthcheck
-RUN apt-get update && apt-get install -y --no-install-recommends curl && \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    libpq-dev \
+    postgresql \
+    postgresql-contrib \
+    gcc \
+    g++ \
+    make && \
     rm -rf /var/lib/apt/lists/*
 
 # Copier le code
 COPY ./entrypoint.sh /tmp/entrypoint.sh
 COPY ./src /app/src
 COPY ./tests /app/tests
+COPY ./pytest.ini /app/pytest.ini
+COPY ./.env.test /app/.env.test
 
 WORKDIR /app
 
@@ -36,6 +45,10 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 
 # Utilisateur non-root pour la sécurité
 RUN useradd --create-home appuser
+
+# Give permissions to the appuser
+RUN chown -R appuser:appuser /app
+
 USER appuser
 
 # Entrypoint (par exemple pour lancer uvicorn)
