@@ -18,6 +18,9 @@ package = importlib.import_module('src.entity')
 for _, module_name, _ in pkgutil.walk_packages(package.__path__, package.__name__ + '.'):
     module = importlib.import_module(module_name)
 
+# ----------------------------------------------------------------
+# Fixtures for Database
+# ----------------------------------------------------------------
 @pytest.fixture
 def db_session(postgresql):
     """
@@ -58,6 +61,9 @@ def fake_redis():
     fake_redis_instance = fakeredis.FakeStrictRedis()
     yield fake_redis_instance
 
+# ----------------------------------------------------------------
+# Fixtures for Match Data
+# ----------------------------------------------------------------
 @pytest.fixture
 def simple_match():
     return pd.DataFrame({
@@ -101,7 +107,7 @@ def raw_match():
         "Comment": "Completed",
         "Best of": 3,
         "Loser": "Djokovic N.",
-        "Round": "Final",
+        "Round": "The Final",
         "Winner": "Federer R.",
         "Court": "Outdoor",
         "Surface": "Grass",
@@ -141,7 +147,7 @@ def raw_matches_batch(raw_match: Dict):
             "Comment": "Completed",
             "Best of": 3,
             "Loser": "Nadal R.",
-            "Round": "Final",
+            "Round": "The Final",
             "Winner": "Djokovic N.",
             "Court": "Outdoor",
             "Surface": "Hard",
@@ -174,3 +180,88 @@ def raw_matches_batch(raw_match: Dict):
         }
     ]
 
+# ----------------------------------------------------------------
+# Fixtures for Player Data
+# ----------------------------------------------------------------
+@pytest.fixture
+def super_joueur(db_session):
+    """
+    Create a super player with caracteristics and add it to the database
+    """
+    from src.entity.player import Player, Caracteristics
+
+    player = Player(
+        name="Joueur S.",
+        tennis_id='J001',
+        caracteristics=Caracteristics(
+            first_name="Super",
+            last_name="Joueur",
+            date_of_birth="1981-08-08",
+            nationality="France",
+            height_cm=185,
+            weight_kg=85,
+            play_hand="R",
+            back_hand=1,
+            pro_year=1998,
+        )
+    )
+
+    db_session.add(player)
+    db_session.commit()
+
+    return player
+
+@pytest.fixture
+def roland_garros_final():
+    """
+    Create a Roland Garros final match with odds and new players
+    """
+    from src.entity.match import Match
+    from src.entity.odds import Odds
+    from src.entity.player import Player
+
+    match = Match(
+        date="2023-06-11",
+        comment="Completed",
+        winner=Player(name="Djokovic N."),
+        loser=Player(name="Ruud C."),
+        tournament_name="Roland Garros",
+        tournament_series="Grand Slam",
+        tournament_surface="Clay",
+        tournament_court="Outdoor",
+        tournament_round="The Final",
+        tournament_location="Paris",
+        winner_rank=3,
+        winner_points=5955,
+        loser_rank=4,
+        loser_points=4960,
+    )
+
+    match.odds = [
+        Odds(
+            bookmaker="B365",
+            winner=1.2,
+            loser=4.8,
+            match=match
+        ),
+        Odds(
+            bookmaker="PS",
+            winner=1.22,
+            loser=4.92,
+            match=match
+        ),
+        Odds(
+            bookmaker="Max",
+            winner=1.24,
+            loser=5.15,
+            match=match
+        ),
+        Odds(
+            bookmaker="Avg",
+            winner=1.21,
+            loser=4.7,
+            match=match
+        ),
+    ]
+
+    return match

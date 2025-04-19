@@ -5,9 +5,17 @@ from src.service.match import (
     get_players,
     get_all_odds,
     get_match,
+    insert_new_match,
 )
 
 def test_get_players(raw_match: Dict):
+    """
+    Test the get_players function
+    
+    Get the players from the raw match and return a tuple of Player objects
+    The players are created from the raw match data and the names are set
+    to the names of the players in the raw match data
+    """
     winner, loser = get_players(raw_match)
 
     assert winner.name == raw_match.get("Winner")
@@ -16,6 +24,11 @@ def test_get_players(raw_match: Dict):
     assert loser.name == "Djokovic N."
 
 def test_get_all_odds(raw_match: Dict):
+    """
+    Test the get_all_odds function
+
+    Get all odds from the raw match and return a list of Odds objects
+    """
     odds = get_all_odds(raw_match)
 
     assert len(odds) == 3, "Number of odds is not correct"
@@ -45,6 +58,9 @@ def test_get_all_odds(raw_match: Dict):
     assert avg_odds.loser == 2.3
 
 def test_get_match(raw_match: Dict):
+    """
+    Test the get_match function
+    """
     match = get_match(raw_match)
 
     assert match.comment == raw_match.get("Comment")
@@ -65,7 +81,7 @@ def test_get_match(raw_match: Dict):
     assert match.tournament_series == "Grand Slam"
     assert match.tournament_surface == "Grass"
     assert match.tournament_court == "Outdoor"
-    assert match.tournament_round == "Final"
+    assert match.tournament_round == "The Final"
     assert match.tournament_location == "London"
     assert match.winner_rank == 1
     assert match.winner_points == 4000
@@ -73,6 +89,9 @@ def test_get_match(raw_match: Dict):
     assert match.loser_points == 3000
 
 def test_parse_raw_match(raw_match: Dict):
+    """
+    Test the parse_raw_match function
+    """
     match = parse_raw_match(raw_match)
 
     assert match.comment == raw_match.get("Comment")
@@ -121,6 +140,13 @@ def test_parse_raw_match(raw_match: Dict):
     assert match.loser.name == "Djokovic N."
 
 def test_parse_raw_matches_batch(raw_matches_batch: List[Dict]):
+    """
+    Test the parse_raw_matches_batch function
+
+    Parse a batch of raw matches and return a list of Match objects
+    The matches are created from the raw match data and the names are set
+    to the names of the players in the raw match data
+    """
     matches = parse_raw_matches(raw_matches_batch)
 
     assert len(matches) == len(raw_matches_batch), "Number of matches is not correct"
@@ -137,3 +163,35 @@ def test_parse_raw_matches_batch(raw_matches_batch: List[Dict]):
         assert match.tournament_court == raw_match.get("Court")
         assert match.tournament_round == raw_match.get("Round")
         assert match.tournament_location == raw_match.get("Location")
+
+def test_insert_new_match(db_session, super_joueur):
+    """
+    Test inserting a new match into the database
+    """
+    raw_match = {
+        "Date": "2023-04-01",
+        "Comment": "Walkover",
+        "WRank": 1,
+        "WPts": 3000,
+        "LRank": 2000,
+        "LPts": 2900,
+        "Tournament": "Wimbledon",
+        "Series": "Grand Slam",
+        "Surface": "Grass",
+        "Court": "Outdoor",
+        "Round": "Semifinals",
+        "Location": "London",
+        "Winner": super_joueur.name,
+        "Loser": "Unknown A.",
+        "B365W": 1.5,
+        "B365L": 2.6
+    }
+
+    match = insert_new_match(db=db_session, raw_match=raw_match)
+
+    assert match.id is not None
+    assert match.winner.name == super_joueur.name
+    assert match.winner.caracteristics is not None
+    assert match.loser.name == "Unknown A."
+    assert match.loser.caracteristics is None
+    assert len(match.odds) > 0
