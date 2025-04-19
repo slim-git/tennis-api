@@ -67,7 +67,359 @@ def fake_redis():
 # -----------------------------------------------------------------
 @pytest.fixture(autouse=True)
 def mock_responses():
-    with responses.RequestsMock() as rsps:
+    with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
+        rsps.add(
+            rsps.GET,
+            "https://www.atptour.com/en/-/www/players/hero/F324",
+            json={
+                "LastName": "Federer",
+                "FirstName": "Roger",
+                "MidInitial": None,
+                "BirthCity": "Basel, Switzerland",
+                "Residence": None,
+                "Coach": "Ivan Ljubicic, Severin Luthi",
+                "Pronunciation": None,
+                "BirthDate": "1981-08-08T00:00:00",
+                "Age": None,
+                "NatlId": "SUI",
+                "Nationality": "Switzerland",
+                "HeightIn": 73,
+                "HeightFt": "6'1\"",
+                "HeightCm": 185,
+                "WeightLb": 187,
+                "WeightKg": 85,
+                "PlayHand": {
+                    "Id": "R",
+                    "Description": "Right-Handed"
+                },
+                "BackHand": {
+                    "Id": "1",
+                    "Description": "One-Handed"
+                },
+                "ProYear": 1998,
+                "Active": {
+                    "Id": "I",
+                    "Description": "Inactive"
+                },
+                "DblSpecialist": False,
+                "SglRank": None,
+                "SglHiRank": 1,
+                "SglRankMove": 0,
+                "SglRankTie": False,
+                "DblRank": None,
+                "DblHiRank": 24,
+                "DblRankMove": 0,
+                "DblRankTie": False,
+                "ScRelativeUrlPlayerProfile": "/en/players/roger-federer/f324/overview",
+                "ScRelativeUrlPlayerCountryFlag": "/en/~/media/images/flags/sui.svg",
+                "GladiatorImageUrl": None,
+                "SglCareerWon": 1251,
+                "SglCareerLost": 275,
+                "SglYtdWon": 0,
+                "SglYtdLost": 0,
+                "SglCareerTitles": 103,
+                "SglYtdTitles": 0,
+                "SglYtdPrizeFormatted": "$0",
+                "CareerPrizeFormatted": "$130,594,339",
+                "DblCareerWon": 131,
+                "DblCareerLost": 93,
+                "DblYtdWon": 0,
+                "DblYtdLost": 0,
+                "DblCareerTitles": 8,
+                "DblYtdTitles": 0,
+                "DblYtdPrizeFormatted": "$0",
+                "IsCarbonTrackerEnabled": False,
+                "SocialLinks": [
+                    {
+                    "SocialId": "FB",
+                    "SocialLink": "https://www.facebook.com/Federer"
+                    },
+                    {
+                    "SocialId": "IG",
+                    "SocialLink": "https://www.instagram.com/rogerfederer/"
+                    },
+                    {
+                    "SocialId": "TW",
+                    "SocialLink": "https://twitter.com/rogerfederer"
+                    },
+                    {
+                    "SocialId": "Web",
+                    "SocialLink": "http://www.rogerfederer.com"
+                    }
+                ],
+                "CacheTags": None,
+                "TopCourtLink": "",
+                "SglHiRankDate": "2004-02-02T00:00:00",
+                "DblHiRankDate": "2003-06-09T00:00:00"
+            },
+            status=200
+        )
+
+        rsps.add(
+            rsps.GET,
+            "https://www.atptour.com/en/-/www/site-search/federer/",
+            json={
+                "Players": [
+                    {
+                    "PlayerId": "F324",
+                    "LastName": "Federer",
+                    "FirstName": "Roger",
+                    "NatlId": "SUI",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=F324&w=150&h=200",
+                    "SubCategoryName": "roger-federer-f324"
+                    }
+                ],
+                "Tournaments": []
+            },
+            status=200
+        )
+
+        rsps.add(
+            rsps.GET,
+            "https://www.atptour.com/en/-/www/site-search/herbert/",
+            json={
+                "Players": [
+                    {
+                    "PlayerId": "BS65",
+                    "LastName": "Baddeley",
+                    "FirstName": "Herbert",
+                    "NatlId": None,
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=BS65&w=150&h=200",
+                    "SubCategoryName": "herbert-baddeley-bs65"
+                    },
+                    {
+                    "PlayerId": "BO78",
+                    "LastName": "Behrens",
+                    "FirstName": "Herbert",
+                    "NatlId": "USA",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=BO78&w=150&h=200",
+                    "SubCategoryName": "herbert-behrens-bo78"
+                    },
+                    {
+                    "PlayerId": "B705",
+                    "LastName": "Bende",
+                    "FirstName": "Herbert",
+                    "NatlId": "SVK",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=B705&w=150&h=200",
+                    "SubCategoryName": "herbert-bende-b705"
+                    },
+                    {
+                    "PlayerId": "BP00",
+                    "LastName": "Bowman",
+                    "FirstName": "Herbert",
+                    "NatlId": "USA",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=BP00&w=150&h=200",
+                    "SubCategoryName": "herbert-bowman-bp00"
+                    },
+                    {
+                    "PlayerId": "BM64",
+                    "LastName": "Browne",
+                    "FirstName": "Herbert",
+                    "NatlId": "USA",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=BM64&w=150&h=200",
+                    "SubCategoryName": "herbert-browne-bm64"
+                    },
+                    {
+                    "PlayerId": "CL93",
+                    "LastName": "Chipp",
+                    "FirstName": "Herbert",
+                    "NatlId": "GBR",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=CL93&w=150&h=200",
+                    "SubCategoryName": "herbert-chipp-cl93"
+                    },
+                    {
+                    "PlayerId": "FA25",
+                    "LastName": "Fischer",
+                    "FirstName": "Herbert",
+                    "NatlId": "USA",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=FA25&w=150&h=200",
+                    "SubCategoryName": "herbert-fischer-fa25"
+                    },
+                    {
+                    "PlayerId": "H893",
+                    "LastName": "Herbert",
+                    "FirstName": "Chris",
+                    "NatlId": "GBR",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=H893&w=150&h=200",
+                    "SubCategoryName": "chris-herbert-h893"
+                    },
+                    {
+                    "PlayerId": "H966",
+                    "LastName": "Herbert",
+                    "FirstName": "Justus",
+                    "NatlId": "GER",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=H966&w=150&h=200",
+                    "SubCategoryName": "justus-herbert-h966"
+                    },
+                    {
+                    "PlayerId": "H996",
+                    "LastName": "Herbert",
+                    "FirstName": "Pierre-Hugues",
+                    "NatlId": "FRA",
+                    "Active": "A",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=H996&w=150&h=200",
+                    "SubCategoryName": "pierre-hugues-herbert-h996"
+                    },
+                    {
+                    "PlayerId": "H430",
+                    "LastName": "Herbert",
+                    "FirstName": "William",
+                    "NatlId": "GBR",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=H430&w=150&h=200",
+                    "SubCategoryName": "william-herbert-h430"
+                    },
+                    {
+                    "PlayerId": "J385",
+                    "LastName": "Jerich",
+                    "FirstName": "Herbert",
+                    "NatlId": "AUT",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=J385&w=150&h=200",
+                    "SubCategoryName": "herbert-jerich-j385"
+                    },
+                    {
+                    "PlayerId": "KG69",
+                    "LastName": "Kinzl",
+                    "FirstName": "Herbert",
+                    "NatlId": "AUT",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=KG69&w=150&h=200",
+                    "SubCategoryName": "herbert-kinzl-kg69"
+                    },
+                    {
+                    "PlayerId": "LG94",
+                    "LastName": "Lawford",
+                    "FirstName": "Herbert",
+                    "NatlId": "GBR",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=LG94&w=150&h=200",
+                    "SubCategoryName": "herbert-lawford-lg94"
+                    },
+                    {
+                    "PlayerId": "L0E1",
+                    "LastName": "Loerke",
+                    "FirstName": "Herbert",
+                    "NatlId": "GER",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=L0E1&w=150&h=200",
+                    "SubCategoryName": None
+                    },
+                    {
+                    "PlayerId": "M0M2",
+                    "LastName": "Mann",
+                    "FirstName": "Herbert",
+                    "NatlId": "AUT",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=M0M2&w=150&h=200",
+                    "SubCategoryName": None
+                    },
+                    {
+                    "PlayerId": "R509",
+                    "LastName": "Rapp",
+                    "FirstName": "Herbert",
+                    "NatlId": "USA",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=R509&w=150&h=200",
+                    "SubCategoryName": "herbert-rapp-r509"
+                    },
+                    {
+                    "PlayerId": "RF72",
+                    "LastName": "Roper-Barrett",
+                    "FirstName": "Herbert",
+                    "NatlId": "GBR",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=RF72&w=150&h=200",
+                    "SubCategoryName": "herbert-roper-barrett-rf72"
+                    },
+                    {
+                    "PlayerId": "S264",
+                    "LastName": "Sandberg",
+                    "FirstName": "Herbert",
+                    "NatlId": "GER",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=S264&w=150&h=200",
+                    "SubCategoryName": "herbert-sandberg-s264"
+                    },
+                    {
+                    "PlayerId": "TF94",
+                    "LastName": "Taylor",
+                    "FirstName": "Herbert",
+                    "NatlId": None,
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=TF94&w=150&h=200",
+                    "SubCategoryName": "herbert-taylor-tf94"
+                    },
+                    {
+                    "PlayerId": "TF28",
+                    "LastName": "Turner",
+                    "FirstName": "Herbert",
+                    "NatlId": "AUS",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=TF28&w=150&h=200",
+                    "SubCategoryName": "herbert-turner-tf28"
+                    },
+                    {
+                    "PlayerId": "W487",
+                    "LastName": "Weirather",
+                    "FirstName": "Herbert",
+                    "NatlId": "AUT",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=W487&w=150&h=200",
+                    "SubCategoryName": "herbert-weirather-w487"
+                    },
+                    {
+                    "PlayerId": "W858",
+                    "LastName": "Whitney",
+                    "FirstName": "Herbert",
+                    "NatlId": "GBR",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=W858&w=150&h=200",
+                    "SubCategoryName": "herbert-whitney-w858"
+                    },
+                    {
+                    "PlayerId": "WA15",
+                    "LastName": "Wilberforce",
+                    "FirstName": "Herbert W.W.",
+                    "NatlId": None,
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=WA15&w=150&h=200",
+                    "SubCategoryName": "herbert-ww-wilberforce-wa15"
+                    },
+                    {
+                    "PlayerId": "W964",
+                    "LastName": "Wilson-Fox",
+                    "FirstName": "Herbert",
+                    "NatlId": "GBR",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=W964&w=150&h=200",
+                    "SubCategoryName": "herbert-wilson-fox-w964"
+                    },
+                    {
+                    "PlayerId": "W200",
+                    "LastName": "Wiltschnig",
+                    "FirstName": "Herbert",
+                    "NatlId": "AUT",
+                    "Active": "I",
+                    "PlayerHeadshotUrl": "https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=W200&w=150&h=200",
+                    "SubCategoryName": "herbert-wiltschnig-w200"
+                    }
+                ],
+                "Tournaments": []
+                },
+            status=200
+        )
+        
         yield rsps
 
 # ----------------------------------------------------------------
