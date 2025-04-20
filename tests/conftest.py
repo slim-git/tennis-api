@@ -799,6 +799,47 @@ def wimbledon_final(db_session):
     return match
 
 @pytest.fixture
+def wimbledon_final_raw(wimbledon_final):
+    """
+    Create a Wimbledon final match with odds and new players
+    """
+    raw_match = {
+        "Comment": wimbledon_final.comment,
+        "Loser": wimbledon_final.loser.name,
+        "Round": wimbledon_final.tournament_round,
+        "Winner": wimbledon_final.winner.name,
+        "Court": wimbledon_final.tournament_court,
+        "Surface": wimbledon_final.tournament_surface,
+        "Date": wimbledon_final.date.strftime("%Y-%m-%d"),
+        "Tournament": wimbledon_final.tournament_name,
+        "Location": wimbledon_final.tournament_location,
+        "Series": wimbledon_final.tournament_series,
+        "WRank": wimbledon_final.winner_rank,
+        "WPts": wimbledon_final.winner_points,
+        "LPts": wimbledon_final.loser_points,
+        "LRank": wimbledon_final.loser_rank,
+        "Best of": 3,
+        "Wsets": 3,
+        "Lsets": 0,
+        'W1': 6,
+        'W2': 6,
+        'W3': 6,
+        'W4': None,
+        'W5': None,
+        'L1': 3,
+        'L2': 2,
+        'L3': 0,
+        'L4': None,
+        'L5': None,
+    }
+
+    for i, odds in enumerate(wimbledon_final.odds):
+        raw_match[f'{odds.bookmaker}W'] = odds.winner
+        raw_match[f'{odds.bookmaker}L'] = odds.loser
+
+    return raw_match
+
+@pytest.fixture
 def roland_garros_final():
     """
     Create a Roland Garros final match with odds and new players

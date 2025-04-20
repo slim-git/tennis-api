@@ -1,4 +1,5 @@
 from src.entity.match import Match
+from starlette.status import HTTP_200_OK, HTTP_422_UNPROCESSABLE_ENTITY
 
 def test_insert_match_success(client, db_session, raw_match):
     # Count the number of matches in the database before insertion
@@ -7,7 +8,7 @@ def test_insert_match_success(client, db_session, raw_match):
     # Insert a valid match
     response = client.post("/match/insert", json=raw_match)
     
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     response_json = response.json()
     assert response_json.get("status") == "ok", "Status should be 'ok'"
     
@@ -27,20 +28,18 @@ def test_insert_match_success(client, db_session, raw_match):
     assert match_in_db.loser.name == raw_match.get("Loser")
 
     # Check the response
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response.json() == {
         "status": "ok",
         "match_id": match_in_db.id,
     }
     
+# Test for inserting an already existing match
+def test_insert_match_integrity_error(client, db_session, wimbledon_final_raw):
+    """
+    Test inserting an already existing match into the database
+    """
+    # Attempt to insert the same match again
+    response = client.post("/match/insert", json=wimbledon_final_raw)
 
-# # Test pour une erreur d'intégrité (match déjà existant)
-# def test_insert_match_integrity_error(client):
-#     # Insertion initiale d'un match
-#     client.post("/match/insert", json=valid_match_data)
-
-#     # Nouvelle tentative d'insertion du même match
-#     response = client.post("/match/insert", json=valid_match_data)
-
-#     assert response.status_code == 422
-#     assert response.json() == {"detail": "Entity already exists in the database"}
+    assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY, f"Status code should be {HTTP_422_UNPROCESSABLE_ENTITY} for duplicate match"
