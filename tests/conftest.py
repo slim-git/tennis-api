@@ -7,6 +7,7 @@ import fakeredis
 from typing import Dict
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
+from responses.matchers import json_params_matcher
 
 from src.entity import Base
 
@@ -70,7 +71,7 @@ def mock_responses():
     with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
         rsps.add(
             rsps.GET,
-            "https://www.atptour.com/en/-/www/players/hero/F324",
+            "https://www.atptour.com/en/-/www/players/hero/F324/",
             json={
                 "LastName": "Federer",
                 "FirstName": "Roger",
@@ -420,6 +421,121 @@ def mock_responses():
             status=200
         )
         
+        rsps.add(
+            rsps.POST,
+            "http://localhost:8191/v1",
+            match=[json_params_matcher({
+                "cmd": "request.get",
+                "url": "https://www.atptour.com/en/-/www/site-search/gasquet/",
+                "maxTimeout": 60000,
+            })],
+            json={
+                "status": "ok",
+                "message": "Challenge not detected!",
+                "solution": {
+                    "url": "https://www.atptour.com/en/-/www/site-search/gasquet/",
+                    "status": 200,
+                    "cookies": [
+                        {
+                            "version": 0,
+                            "name": "__cf_bm",
+                            "value": "WDSm4XHIA8j37G9XV8CUfLKlUVTBysgyT23FkRppgtM-1745136598-1.0.1.1-m4nLAUUG.jeVm2QXn_9moCv_FQJ0x7tdVvrInb5kdJkN_v.larvZupdSl7yBs8WK3q32axMEUdZF5iIMAzjYp3ymMmJOy1TTa6BPvPuxSJQ",
+                            "port": None,
+                            "port_specified": False,
+                            "domain": ".atptour.com",
+                            "domain_specified": True,
+                            "domain_initial_dot": True,
+                            "path": "/",
+                            "path_specified": True,
+                            "secure": True,
+                            "expires": 1745138398,
+                            "discard": True,
+                            "comment": None,
+                            "comment_url": None,
+                            "rfc2109": False,
+                            "_rest": {
+                                "HttpOnly": None
+                            }
+                        },
+                        {
+                            "version": 0,
+                            "name": "__Secure-ENID",
+                            "value": "27.SE=GdzvtamVZTVdmqlnUQ4oTV7-4n9LEA4-QFnIHHTH3wQDVKkV20g6PCFev_Sr17kvtHzSyb7Zl8c41QMOsYZecJRykBL-Yq7GM9JCc0YkS8LyXG-qrlyTXP2-_ifZn-KeYjIIrfv_QmptCwCQlkSGdstAQD3eKOwVbeVeUpytdY-i_Kai8uSkNp4LmmE0PXAIq4_DYqCf-b5HqFUOtELS89CBnSn6kaju82Ilk-PARJzxLOam",
+                            "port": None,
+                            "port_specified": False,
+                            "domain": ".google.com",
+                            "domain_specified": True,
+                            "domain_initial_dot": True,
+                            "path": "/",
+                            "path_specified": True,
+                            "secure": True,
+                            "expires": 1779323296,
+                            "discard": True,
+                            "comment": None,
+                            "comment_url": None,
+                            "rfc2109": False,
+                            "_rest": {
+                                "HttpOnly": None
+                            }
+                        }
+                    ],
+                    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+                    "headers": {},
+                    "response": "<html><head><meta name=\"color-scheme\" content=\"light dark\"><meta charset=\"utf-8\"></head><body><pre>{\"Players\":[{\"PlayerId\":\"G628\",\"LastName\":\"Gasquet\",\"FirstName\":\"Richard\",\"NatlId\":\"FRA\",\"Active\":\"A\",\"PlayerHeadshotUrl\":\"https://www.atptour.com/en/-/ajax/PlayerSearch/HeadshotPhoto?playerId=G628&amp;w=150&amp;h=200\",\"SubCategoryName\":\"richard-gasquet-g628\"}],\"Tournaments\":[]}</pre><div class=\"json-formatter-container\"></div></body></html>"
+                },
+                "startTimestamp": 1745136597163,
+                "endTimestamp": 1745136600038,
+                "version": "3.4.0"
+            },
+        )
+
+        rsps.add(
+            rsps.POST,
+            "http://localhost:8191/v1",
+            match=[json_params_matcher({
+                "cmd": "request.get",
+                "url": "https://www.atptour.com/en/-/www/players/hero/G628/",
+                "maxTimeout": 60000,
+            })],
+            json={
+                "status": "ok",
+                "message": "Challenge not detected!",
+                "solution": {
+                    "url": "https://www.atptour.com/en/-/www/players/hero/G628/",
+                    "status": 200,
+                    "cookies": [
+                        {
+                            "version": 0,
+                            "name": "__cf_bm",
+                            "value": "GY6qsK8u3tOIPnVIMAm9GRdevol.fIfKCIiSh2lm0N0-1745144497-1.0.1.1-ll6tTf2iuAjap4V5dMY5a86bSCnkc.X3wLm51ynROa9uMDBWJiMbuPVFoYpAEjB6_x1JT.H3O3R4KA0kjyEwgWjH9lx.uAeArf6vOpl_ebc",
+                            "port": None,
+                            "port_specified": True,
+                            "domain": ".atptour.com",
+                            "domain_specified": True,
+                            "domain_initial_dot": True,
+                            "path": "/",
+                            "path_specified": True,
+                            "secure": True,
+                            "expires": 1745146297,
+                            "discard": True,
+                            "comment": None,
+                            "comment_url": None,
+                            "rfc2109": True,
+                            "_rest": {
+                                "HttpOnly": None
+                            }
+                        }
+                    ],
+                    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+                    "headers": {},
+                    "response": "<html><head><meta name=\"color-scheme\" content=\"light dark\"><meta charset=\"utf-8\"></head><body><pre>{\"LastName\":\"Gasquet\",\"FirstName\":\"Richard\",\"MidInitial\":null,\"BirthCity\":\"Beziers, France\",\"Residence\":null,\"Coach\":\"Julien Cassaigne\",\"Pronunciation\":\"gas-KAY\",\"BirthDate\":\"1986-06-18T00:00:00\",\"Age\":38,\"NatlId\":\"FRA\",\"Nationality\":\"France\",\"HeightIn\":72,\"HeightFt\":\"6'0\\\"\",\"HeightCm\":183,\"WeightLb\":174,\"WeightKg\":79,\"PlayHand\":{\"Id\":\"R\",\"Description\":\"Right-Handed\"},\"BackHand\":{\"Id\":\"1\",\"Description\":\"One-Handed\"},\"ProYear\":2002,\"Active\":{\"Id\":\"A\",\"Description\":\"Active\"},\"DblSpecialist\":false,\"SglRank\":142,\"SglHiRank\":7,\"SglRankMove\":22,\"SglRankTie\":false,\"DblRank\":null,\"DblHiRank\":45,\"DblRankMove\":0,\"DblRankTie\":false,\"ScRelativeUrlPlayerProfile\":\"/en/players/richard-gasquet/g628/overview\",\"ScRelativeUrlPlayerCountryFlag\":\"/en/~/media/images/flags/fra.svg\",\"GladiatorImageUrl\":null,\"SglCareerWon\":609,\"SglCareerLost\":407,\"SglYtdWon\":3,\"SglYtdLost\":4,\"SglCareerTitles\":16,\"SglYtdTitles\":0,\"SglYtdPrizeFormatted\":\"$107,399\",\"CareerPrizeFormatted\":\"$21,338,168\",\"DblCareerWon\":72,\"DblCareerLost\":63,\"DblYtdWon\":0,\"DblYtdLost\":1,\"DblCareerTitles\":2,\"DblYtdTitles\":0,\"DblYtdPrizeFormatted\":\"$1,699\",\"IsCarbonTrackerEnabled\":false,\"SocialLinks\":[{\"SocialId\":\"IG\",\"SocialLink\":\"https://www.instagram.com/richardgasquet34/\"},{\"SocialId\":\"TW\",\"SocialLink\":\"https://twitter.com/richardgasquet1\"}],\"CacheTags\":null,\"TopCourtLink\":\"\",\"SglHiRankDate\":\"2007-07-09T00:00:00\",\"DblHiRankDate\":\"2008-04-07T00:00:00\"}</pre><div class=\"json-formatter-container\"></div></body></html>"
+                },
+                "startTimestamp": 1745144495599,
+                "endTimestamp": 1745144498574,
+                "version": "3.4.0"
+            }
+        )
+
         yield rsps
 
 # ----------------------------------------------------------------
