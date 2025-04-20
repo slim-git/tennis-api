@@ -1,4 +1,3 @@
-# src/jobs/player.py
 import logging
 from datetime import datetime
 from rq_scheduler import Scheduler
@@ -21,10 +20,16 @@ def schedule_player_details(raw_player_name: str):
     """
     Schedule the job to fill player details
     """
-    logger.info(f"Scheduling job for player: {raw_player_name}")
     with next(get_redis_connection()) as r:
         scheduler = Scheduler(connection=r)
+        # Check if the job is already scheduled
+        for job in scheduler.get_jobs():
+            if job.id == raw_player_name:
+                logger.debug(f"Job for player {raw_player_name} already scheduled.")
+                return
+
         # Schedule the job to run immediately
+        logger.info(f"Scheduling job for player: {raw_player_name}")
         scheduler.schedule(
             scheduled_time=datetime.utcnow(),
             func=fill_player_details,
