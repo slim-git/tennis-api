@@ -1,9 +1,10 @@
 from sqlalchemy import Integer, String, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, mapped_column, Mapped
-from src.entity.odds import Odds
-from src.entity.player import Player
-from typing import Literal, Optional, ClassVar
+from src.entity.odds import Odds, OddsApi
+from src.entity.player import Player, PlayerApiDetail
+from typing import Literal, Optional, ClassVar, List
 from pydantic import BaseModel, Field, ConfigDict
+from datetime import datetime
 
 from . import Base
 
@@ -40,6 +41,34 @@ class Match(Base):
 
     winner: Mapped["Player"] = relationship("Player", foreign_keys=[fk_winner_id])
     loser: Mapped["Player"] = relationship("Player", foreign_keys=[fk_loser_id])
+
+# -----------------------------------------------------------
+# Pydantic Model for Match
+# -----------------------------------------------------------
+
+class MatchApiBase(BaseModel):
+    id: int
+    date: Optional[datetime]
+    comment: Optional[str]
+    winner_rank: Optional[int]
+    winner_points: Optional[int]
+    loser_rank: Optional[int]
+    loser_points: Optional[int]
+    tournament_name: Optional[str]
+    tournament_series: Optional[str]
+    tournament_surface: Optional[str]
+    tournament_court: Optional[str]
+    tournament_round: Optional[str]
+    tournament_location: Optional[str]
+    fk_winner_id: int
+    fk_loser_id: int
+
+    model_config: ClassVar[ConfigDict] = ConfigDict(orm_mode=True)
+
+class MatchApiDetail(MatchApiBase):
+    winner: Optional[PlayerApiDetail]
+    loser: Optional[PlayerApiDetail]
+    odds: Optional[List[OddsApi]]
 
 # -------------------------------------------------------
 class RawMatch(BaseModel):

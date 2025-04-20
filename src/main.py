@@ -35,7 +35,12 @@ from src.model import (
     list_registered_models,
     load_model
 )
-from src.entity.match import Match, RawMatch
+from src.entity.match import (
+    Match,
+    RawMatch,
+    MatchApiBase,
+    MatchApiDetail
+)
 from src.entity.tournament import Tournament
 from src.repository.common import get_session
 from src.repository.sql import list_tournaments as _list_tournaments
@@ -204,6 +209,24 @@ async def list_tournaments(circuit: Literal["atp", "wta"]):
     List the tournaments of the circuit
     """
     return _list_tournaments(circuit)
+
+# Get a match
+@app.get("/match/{match_id}", tags=["match"], description="Get a match from the database", response_model=MatchApiDetail)
+async def get_match(
+    match_id: int,
+    session: Annotated[Session, Depends(get_session)]
+):
+    """
+    Get a match from the database
+    """
+    match = session.query(Match).filter(Match.id == match_id).first()
+    if not match:
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail=f"Match {match_id} not found"
+        )
+
+    return match
 
 
 @app.post("/match/insert", tags=["match"], description="Insert a match into the database")

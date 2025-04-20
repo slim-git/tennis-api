@@ -2,7 +2,8 @@
 from datetime import date
 from sqlalchemy import Integer, String, ForeignKey
 from sqlalchemy.orm import relationship, mapped_column, Mapped
-from typing import List
+from typing import List, Optional
+from pydantic import BaseModel
 
 from . import Base
 
@@ -44,3 +45,30 @@ class Caracteristics(Base):
 
     fk_player_id: Mapped[int] = mapped_column(ForeignKey("data.player.id", ondelete="CASCADE", name='caracteristics_fk_player_id_fkey'), nullable=False)
     player: Mapped["Player"] = relationship("Player", back_populates="caracteristics")
+
+
+# -----------------------------------------------------------
+# Pydantic Model for Player
+# -----------------------------------------------------------
+class PlayerApiBase(BaseModel):
+    id: int
+    name: str
+    tennis_id: Optional[str]
+
+class PlayerApiDetail(PlayerApiBase):
+    caracteristics: Optional['CaracteristicsApi']
+
+# -----------------------------------------------------------
+# Pydantic Model for Caracteristics
+# -----------------------------------------------------------
+class CaracteristicsApi(BaseModel):
+    id: int
+    nationality: str
+    last_name: str
+    first_name: str
+    play_hand: str
+    back_hand: int
+    height_cm: int
+    weight_kg: int
+    date_of_birth: date
+    pro_year: int

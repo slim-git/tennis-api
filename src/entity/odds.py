@@ -1,5 +1,7 @@
 from sqlalchemy import String, Float, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, mapped_column, Mapped
+from typing import Optional
+from pydantic import BaseModel
 
 from . import Base
 
@@ -21,3 +23,12 @@ class Odds(Base):
 
     fk_match_id: Mapped[int] = mapped_column(ForeignKey("data.match.id", ondelete="CASCADE", name='odds_fk_match_id_fkey'), nullable=False)
     match: Mapped["Match"] = relationship("Match", back_populates="odds")  # type: ignore # noqa: F821
+
+# -----------------------------------------------------------
+# Pydantic Model for Odds
+# -----------------------------------------------------------
+class OddsApi(BaseModel):
+    id: int
+    bookmaker: Optional[str]
+    winner: Optional[float]
+    loser: Optional[float]
