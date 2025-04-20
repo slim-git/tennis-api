@@ -741,6 +741,64 @@ def nouveau_joueur(db_session):
     return player
 
 @pytest.fixture
+def wimbledon_final(db_session):
+    """
+    Create a Wimbledon final match with odds and new players
+    """
+    from src.entity.match import Match
+    from src.entity.odds import Odds
+    from src.entity.player import Player
+    
+    match = Match(
+        date="2019-06-15",
+        comment="Completed",
+        winner=Player(name="Federer R."),
+        loser=Player(name="Djokovic N."),
+        tournament_name="Wimbledon",
+        tournament_series="Grand Slam",
+        tournament_surface="Grass",
+        tournament_court="Outdoor",
+        tournament_round="The Final",
+        tournament_location="London",
+        winner_rank=1,
+        winner_points=4000,
+        loser_rank=2,
+        loser_points=3000,
+    )
+    match.odds = [
+        Odds(
+            bookmaker="B365",
+            winner=1.2,
+            loser=4.5,
+            match=match
+        ),
+        Odds(
+            bookmaker="PS",
+            winner=1.22,
+            loser=4.52,
+            match=match
+        ),
+        Odds(
+            bookmaker="Max",
+            winner=1.24,
+            loser=4.55,
+            match=match
+        ),
+        Odds(
+            bookmaker="Avg",
+            winner=1.21,
+            loser=4.7,
+            match=match
+        ),
+    ]
+
+    # Add the match to the database
+    db_session.add(match)
+    db_session.commit()
+
+    return match
+
+@pytest.fixture
 def roland_garros_final():
     """
     Create a Roland Garros final match with odds and new players
