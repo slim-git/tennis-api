@@ -14,6 +14,7 @@ from src.repository.common import get_session
 
 from src.entity import Base
 
+# ----------------------------------------------------------------
 # Load all classes from src.entity
 module = importlib.import_module('src.entity')
 
@@ -62,16 +63,19 @@ def db_session(postgresql):
     Base.metadata.create_all(engine)
 
     connection = engine.connect()
-    transaction = connection.begin()
+    connection.begin()
 
     SessionLocal = sessionmaker(bind=connection)
     session = SessionLocal()
 
-    yield session
-
-    session.close()
-    transaction.rollback()
-    connection.close()
+    try:
+        yield session
+    except Exception:
+        session.rollback()  # En cas d'exception, effectuer un rollback explicite
+        raise
+    finally:
+        session.close()
+        connection.close()
 
 # Use of fixture to inject a fake Redis client into the tests
 @pytest.fixture
