@@ -63,7 +63,7 @@ class MatchApiBase(BaseModel):
     fk_winner_id: int
     fk_loser_id: int
 
-    model_config: ClassVar[ConfigDict] = ConfigDict(orm_mode=True)
+    model_config: ClassVar[ConfigDict] = ConfigDict(from_attributes=True)
 
 class MatchApiDetail(MatchApiBase):
     winner: Optional[PlayerApiDetail]
