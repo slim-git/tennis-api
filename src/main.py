@@ -219,29 +219,18 @@ async def list_tournament_names(
     """
     List all the tournament names and first and last year of occurrence
     """
-    # Get all the tournament names
-    # and first and last year of occurrence
-    tournaments = session.query(Match.tournament_name).distinct().all()
+    tournaments = session.execute(text("SELECT t.name, t.first_year, t.last_year FROM data.tournaments_list_m_view AS t")).all()
 
-    output = []
-    # Get the first and last year of occurrence
-    for tournament in sorted([tournament[0] for tournament in tournaments], key=str.lower):
-        first_year = session.query(Match.date).filter(Match.tournament_name == tournament).order_by(Match.date.asc()).first()
-        last_year = session.query(Match.date).filter(Match.tournament_name == tournament).order_by(Match.date.desc()).first()
-        if first_year and last_year:
-            output.append({
-                "name": tournament,
-                "first_year": first_year[0].year,
-                "last_year": last_year[0].year
-            })
-        else:
-            output.append({
-                "name": tournament,
-                "first_year": None,
-                "last_year": None
-            })
-    
-    return output
+    tournaments = [
+        {
+            "name": tournament[0],
+            "first_year": tournament[1],
+            "last_year": tournament[2]
+        }
+        for tournament in tournaments
+    ]
+
+    return tournaments
 
 # Get a player
 @app.get("/player/{player_id}", tags=["player"], description="Get a player from the database", response_model=PlayerApiDetail)
