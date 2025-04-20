@@ -310,6 +310,23 @@ async def check_health(session: Annotated[Session, Depends(get_session)]):
         session.execute(text("SELECT 1"))
     except Exception as e:
         logger.error(f"DB check failed: {e}")
-        return JSONResponse(content={"status": "unhealthy"}, status_code=HTTP_503_SERVICE_UNAVAILABLE)
+        return JSONResponse(content={"status": "unhealthy", "detail": "Database not reachable"},
+                            status_code=HTTP_503_SERVICE_UNAVAILABLE)
+    
+    # Check if the scraper endpoint is reachable
+    if FLARESOLVERR_API := os.getenv("FLARESOLVERR_API"):
+        import requests
+
+        try:
+            # Ping the scraper endpoint
+            response = requests.get(FLARESOLVERR_API + "health", timeout=5)
+            if response.status_code != HTTP_200_OK:
+                logger.error(f"Scraper check failed: {response.status_code}")
+                return JSONResponse(content={"status": "unhealthy", "detail": "Flaresolverr not reachable"},
+                                    status_code=HTTP_503_SERVICE_UNAVAILABLE)
+        except requests.RequestException as e:
+            logger.error(f"Scraper check failed: {e}")
+            return JSONResponse(content={"status": "unhealthy", "detail": "Flaresolverr not reachable"},
+                                status_code=HTTP_503_SERVICE_UNAVAILABLE)
     
     return JSONResponse(content={"status": "healthy"}, status_code=HTTP_200_OK)
