@@ -2,7 +2,7 @@ import os
 import joblib
 import logging
 import secrets
-from typing import Literal, Optional, Annotated
+from typing import Literal, Optional, Annotated, List, Dict
 from datetime import datetime
 from fastapi import (
     FastAPI,
@@ -203,12 +203,64 @@ async def list_available_models():
     return list_registered_models()
 
 
-@app.get("/{circuit}/tournaments", tags=["reference"], description="List the tournaments of the circuit", response_model=list[Tournament])
+@app.get("/{circuit}/tournaments", tags=["tournament"], description="List the tournaments of the circuit", response_model=List[Tournament])
 async def list_tournaments(circuit: Literal["atp", "wta"]):
     """
     List the tournaments of the circuit
     """
     return _list_tournaments(circuit)
+
+# List all the tournament names and years
+@app.get("/tournament/names", tags=["tournament"], description="List all the tournament names and years", response_model=List[Dict])
+async def list_tournament_names(
+    session: Annotated[Session, Depends(get_session)]
+):
+    """
+    List all the tournament names and first and last year of occurrence
+    """
+    # Get all the tournament names
+    # and first and last year of occurrence
+    tournaments = session.query(Match.tournament_name).distinct().all()
+
+    output = []
+    # Get the first and last year of occurrence
+    for tournament in sorted([tournament[0] for tournament in tournaments], key=str.lower):
+        first_year = session.query(Match.date).filter(Match.tournament_name == tournament).order_by(Match.date.asc()).first()
+        last_year = session.query(Match.date).filter(Match.tournament_name == tournament).order_by(Match.date.desc()).first()
+        if first_year and last_year:
+            output.append({
+                "name": tournament,
+                "first_year": first_year[0].year,
+                "last_year": last_year[0].year
+            })
+        else:
+            output.append({
+                "name": tournament,
+                "first_year": None,
+                "last_year": None
+            })
+    
+    return output
+
+# Get all the matches from a tournament
+@app.get("/tournament/matches", tags=["tournament"], description="Get all the matches from a tournament", response_model=List[MatchApiBase])
+async def search_tournament_matches(
+    name: str,
+    year: int,
+    session: Annotated[Session, Depends(get_session)]
+):
+    """
+    Get all the matches from a tournament
+    """
+    start_date = datetime(year, 1, 1)
+    end_date = datetime(year, 12, 31)
+    matches = session.query(Match).filter(
+        Match.tournament_name == name,
+        Match.date.between(start_date, end_date)
+    ).all()
+
+    return sorted(matches, key=lambda x: x.date, reverse=True)
+
 
 # Get a match
 @app.get("/match/{match_id}", tags=["match"], description="Get a match from the database", response_model=MatchApiDetail)
