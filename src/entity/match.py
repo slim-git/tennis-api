@@ -2,6 +2,8 @@ from sqlalchemy import Integer, String, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from src.entity.odds import Odds
 from src.entity.player import Player
+from typing import Literal, Optional, ClassVar
+from pydantic import BaseModel, Field, ConfigDict
 
 from . import Base
 
@@ -38,3 +40,35 @@ class Match(Base):
 
     winner: Mapped["Player"] = relationship("Player", foreign_keys=[fk_winner_id])
     loser: Mapped["Player"] = relationship("Player", foreign_keys=[fk_loser_id])
+
+# -------------------------------------------------------
+class RawMatch(BaseModel):
+    Comment: Literal['Completed', 'Retired', 'Walkover'] = 'Completed'
+    Loser: str = Field(description="The name of the loser.", json_schema_extra={"example": "'Djokovic N.'"})
+    Winner: str = Field(description="The name of the winner.", json_schema_extra={"example": "'Federer R.'"})
+    Round: Literal['1st Round', '2nd Round', '3rd Round', '4th Round', 'Quarterfinals', 'Semifinals', 'The Final', 'Round Robin'] = '1st Round'
+    Court: Literal['Outdoor', 'Indoor'] = 'Outdoor'
+    Surface: Literal['Grass', 'Carpet', 'Clay', 'Hard'] = 'Grass'
+    Wsets: int = Field(description="The number of sets won by the winner.", json_schema_extra={"example": "3"})
+    Lsets: int = Field(description="The number of sets won by the loser.", json_schema_extra={"example": "0"})
+    Date: str = Field(description="The date of the match.", json_schema_extra={"example": "'2019-06-15'"})
+    WRank: int = Field(description="The rank of the winner.", json_schema_extra={"example": "1"})
+    WPts: int = Field(description="The number of points of the winner.", json_schema_extra={"example": "4000"})
+    LPts: int = Field(description="The number of points of the loser.", json_schema_extra={"example": "3000"})
+    LRank: int = Field(description="The rank of the loser.", json_schema_extra={"example": "2"})
+    Location: str = Field(description="The location of the tournament.", json_schema_extra={"example": "'London'"})
+    Series: Literal['ATP250', 'ATP500', 'Grand Slam', 'Masters 1000', 'Masters', 'Masters Cup', 'International Gold', 'International'] = 'Grand Slam'
+    W1: Optional[int] = Field(description="The score of the winner in the first set.", json_schema_extra={"example": "6"})
+    W2: Optional[int] = Field(description="The score of the winner in the second set.", json_schema_extra={"example": "6"})
+    W3: Optional[int] = Field(description="The score of the winner in the third set.", json_schema_extra={"example": "6"})
+    W4: Optional[int] = Field(description="The score of the winner in the fourth set.", json_schema_extra={"example": "None"})
+    W5: Optional[int] = Field(description="The score of the winner in the fifth set.", json_schema_extra={"example": "None"})
+    L1: Optional[int] = Field(description="The score of the loser in the first set.", json_schema_extra={"example": "3"})
+    L2: Optional[int] = Field(description="The score of the loser in the second set.", json_schema_extra={"example": "2"})
+    L3: Optional[int] = Field(description="The score of the loser in the third set.", json_schema_extra={"example": "0"})
+    L4: Optional[int] = Field(description="The score of the loser in the fourth set.", json_schema_extra={"example": "None"})
+    L5: Optional[int] = Field(description="The score of the loser in the fifth set.", json_schema_extra={"example": "None"})
+    Tournament: str = Field(description="The name of the tournament.", json_schema_extra={"example": "Wimbledon"})
+    
+    model_config: ClassVar[ConfigDict] = ConfigDict(extra="allow")
+    
