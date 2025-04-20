@@ -8,6 +8,9 @@ from typing import Dict
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from responses.matchers import json_params_matcher
+from fastapi.testclient import TestClient
+from src.main import app
+from src.repository.common import get_session
 
 from src.entity import Base
 
@@ -19,6 +22,20 @@ package = importlib.import_module('src.entity')
 
 for _, module_name, _ in pkgutil.walk_packages(package.__path__, package.__name__ + '.'):
     module = importlib.import_module(module_name)
+
+@pytest.fixture
+def client(db_session):
+    """
+    Create a test client for the FastAPI app.
+    """
+    # Override the get_session dependency to use the test database session
+    def override_get_session():
+        yield db_session
+    
+    # Override the dependency in the FastAPI app
+    app.dependency_overrides[get_session] = override_get_session
+
+    return TestClient(app)
 
 # ----------------------------------------------------------------
 # Fixtures for Database
