@@ -63,12 +63,12 @@ class PlayerApiDetail(PlayerApiBase):
 # -----------------------------------------------------------
 class CaracteristicsApi(BaseModel):
     id: int
-    nationality: str
-    last_name: str
-    first_name: str
-    play_hand: str
-    back_hand: int
-    height_cm: int
-    weight_kg: int
-    date_of_birth: date
-    pro_year: int
+    nationality: Optional[str]
+    last_name: Optional[str]
+    first_name: Optional[str]
+    play_hand: Optional[str]
+    back_hand: Optional[int]
+    height_cm: Optional[int]
+    weight_kg: Optional[int]
+    date_of_birth: Optional[date]
+    pro_year: Optional[int]

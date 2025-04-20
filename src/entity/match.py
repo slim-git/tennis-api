@@ -1,10 +1,10 @@
-from sqlalchemy import Integer, String, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import Integer, String, Date, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from src.entity.odds import Odds, OddsApi
 from src.entity.player import Player, PlayerApiDetail
 from typing import Literal, Optional, ClassVar, List
 from pydantic import BaseModel, Field, ConfigDict
-from datetime import datetime
+from datetime import date as ddate
 
 from . import Base
 
@@ -20,7 +20,7 @@ class Match(Base):
 
     # Match table columns
     id: Mapped[int] = mapped_column(primary_key=True)
-    date: Mapped[DateTime] = mapped_column(DateTime, nullable=True)
+    date: Mapped[ddate] = mapped_column(Date, nullable=True)
     comment: Mapped[str] = mapped_column(String, nullable=True)
     winner_rank: Mapped[int] = mapped_column(Integer, nullable=True)
     winner_points: Mapped[int] = mapped_column(Integer, nullable=True)
@@ -48,7 +48,7 @@ class Match(Base):
 
 class MatchApiBase(BaseModel):
     id: int
-    date: Optional[datetime]
+    date: Optional[ddate]
     comment: Optional[str]
     winner_rank: Optional[int]
     winner_points: Optional[int]
