@@ -278,6 +278,7 @@ async def insert_batch_match(
     Insert a batch of matches into the database
     """
     matches = []
+    nb_errors = 0
     for raw_match in raw_matches:
         try:
             match = insert_new_match(
@@ -286,18 +287,22 @@ async def insert_batch_match(
             )
             matches.append(match)
         except IntegrityError as e:
+            nb_errors += 1
             logger.error(f"Error inserting match: {e}")
-            raise HTTPException(
-                status_code=HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Entity already exists in the database"
-            )
 
-    output = {
-        "status": "ok",
-        "match_ids": [match.id for match in matches],
-    }
-
-    return JSONResponse(content=output, status_code=HTTP_200_OK)
+    logger.info(f"Number of matches inserted: {len(matches)}")
+    if nb_errors > 0:
+        logger.warning(f"Number of errors: {nb_errors}")
+        return JSONResponse(
+            content={"status": "ok", "message": f"{len(matches)} matches inserted, {nb_errors} errors"},
+            status_code=HTTP_422_UNPROCESSABLE_ENTITY
+        )
+    else:
+        output = {
+            "status": "ok",
+            "match_ids": [match.id for match in matches],
+        }
+        return JSONResponse(content=output, status_code=HTTP_200_OK)
 
 # ------------------------------------------------------------------------------
 @app.get("/check_health", tags=["general"], description="Check the health of the API")
