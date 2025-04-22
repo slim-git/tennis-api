@@ -236,6 +236,44 @@ async def list_tournament_names(
 
     return tournaments
 
+@app.get("/references/courts", tags=["reference"], description="List all the courts")
+async def list_courts(
+    session: Annotated[Session, Depends(get_session)]
+):
+    """
+    List all the courts
+    """
+    courts = session.execute(text("SELECT name FROM data.ref_court_m_view")).all()
+
+    courts = [court[0] for court in courts]
+
+    return courts
+
+@app.get("/references/surfaces", tags=["reference"], description="List all the surfaces")
+async def list_surfaces(
+    session: Annotated[Session, Depends(get_session)]
+):
+    """
+    List all the surfaces
+    """
+    surfaces = session.execute(text("SELECT name FROM data.ref_surface_m_view")).all()
+
+    surfaces = [surface[0] for surface in surfaces]
+
+    return surfaces
+
+@app.get("/references/series", tags=["reference"], description="List all the series")
+async def list_series(
+    session: Annotated[Session, Depends(get_session)]
+):
+    """
+    List all the series
+    """
+    series = session.execute(text("SELECT name FROM data.ref_series_m_view")).all()
+
+    series = [serie[0] for serie in series]
+
+    return series
 
 class ListPlayersInput(BaseModel):
     ids: List[int] = Field(
