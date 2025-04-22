@@ -62,13 +62,13 @@ class MatchApiBase(BaseModel):
     tournament_location: Optional[str]
     fk_winner_id: int
     fk_loser_id: int
+    odds: Optional[List[OddsApi]]
 
     model_config: ClassVar[ConfigDict] = ConfigDict(from_attributes=True)
 
 class MatchApiDetail(MatchApiBase):
     winner: Optional[PlayerApiDetail]
     loser: Optional[PlayerApiDetail]
-    odds: Optional[List[OddsApi]]
 
 # -------------------------------------------------------
 class RawMatch(BaseModel):
