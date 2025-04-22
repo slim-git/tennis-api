@@ -41,7 +41,11 @@ from src.entity.match import (
     MatchApiBase,
     MatchApiDetail
 )
-from src.entity.player import Player, PlayerApiDetail
+from src.entity.player import (
+    Player,
+    PlayerApiDetail,
+    PlayerApiBase
+)
 from src.entity.tournament import Tournament
 from src.repository.common import get_session
 from src.repository.sql import list_tournaments as _list_tournaments
@@ -232,7 +236,34 @@ async def list_tournament_names(
 
     return tournaments
 
-# Get a player
+
+class ListPlayersInput(BaseModel):
+    ids: List[int] = Field(
+        description="List of player IDs",
+    )
+
+# Get a list of players
+@app.get("/players", tags=["player"], description="Get a list of players from the database", response_model=Dict[str|int, Optional[PlayerApiDetail]])
+async def list_players(
+    session: Annotated[Session, Depends(get_session)],
+    params: Annotated[ListPlayersInput, Query()],
+):
+    """
+    Get a list of players from the database
+    """
+    ids = sorted(params.ids)
+    players = session.query(Player).filter(Player.id.in_(ids)).all()
+    
+    if not players:
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail=f"Players {ids} not found"
+        )
+    
+    players = {player.id: player for player in players}
+
+    return {id: players.get(id) for id in ids}
+
 @app.get("/player/{player_id}", tags=["player"], description="Get a player from the database", response_model=PlayerApiDetail)
 async def get_player(
     player_id: int,
