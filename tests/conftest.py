@@ -71,11 +71,56 @@ def db_session(postgresql):
     try:
         yield session
     except Exception:
-        session.rollback()  # En cas d'exception, effectuer un rollback explicite
+        session.rollback()  # In case of an error, rollback the session
         raise
     finally:
         session.close()
         connection.close()
+
+@pytest.fixture()
+def with_materialized_views(db_session):
+    """
+    Create materialized views for testing.
+    """
+    # Create the ref_surface_m_view materialized view
+    db_session.execute(text("""
+        CREATE MATERIALIZED VIEW IF NOT EXISTS data.ref_surface_m_view AS
+        SELECT *
+        FROM (
+            VALUES  ('Carpet'),
+                    ('Clay'),
+                    ('Grass'),
+                    ('Hard')
+            ) AS t(name);
+    """))
+
+    # Create the ref_court_m_view materialized view
+    db_session.execute(text("""
+        CREATE MATERIALIZED VIEW IF NOT EXISTS data.ref_court_m_view AS
+        SELECT *
+        FROM (
+            VALUES  ('Indoor'),
+                    ('Outdoor')
+            ) AS t(name);
+    """))
+    
+    # Create the ref_series_m_view materialized view
+    db_session.execute(text("""
+        CREATE MATERIALIZED VIEW IF NOT EXISTS data.ref_series_m_view AS
+        SELECT *
+        FROM (
+            VALUES  ('ATP250'),
+                    ('ATP500'),
+                    ('Grand Slam'),
+                    ('International'),
+                    ('International Gold'),
+                    ('Masters'),
+                    ('Masters 1000'),
+                    ('Masters Cup')
+            ) AS t(name);
+    """))
+    
+    yield
 
 # Use of fixture to inject a fake Redis client into the tests
 @pytest.fixture
