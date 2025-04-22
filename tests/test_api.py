@@ -43,3 +43,47 @@ def test_insert_match_integrity_error(client, db_session, wimbledon_final_raw):
     response = client.post("/match/insert", json=wimbledon_final_raw)
 
     assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY, f"Status code should be {HTTP_422_UNPROCESSABLE_ENTITY} for duplicate match"
+
+def test_list_surfaces(client, with_materialized_views):
+    """
+    Test the list of surfaces
+    """
+    response = client.get("/references/surfaces")
+    
+    assert response.status_code == HTTP_200_OK
+    assert set(response.json()) == set([
+        "Carpet",
+        "Clay",
+        "Grass",
+        "Hard",
+    ])
+
+def test_list_courts(client, with_materialized_views):
+    """
+    Test the list of courts
+    """
+    response = client.get("/references/courts")
+    
+    assert response.status_code == HTTP_200_OK
+    assert set(response.json()) == set([
+        "Indoor",
+        "Outdoor",
+    ])
+
+def test_list_series(client, with_materialized_views):
+    """
+    Test the list of surfaces
+    """
+    response = client.get("/references/series")
+
+    assert response.status_code == HTTP_200_OK
+    assert set(response.json()) == set([
+        "ATP250",
+        "ATP500",
+        "Grand Slam",
+        "International",
+        "International Gold",
+        "Masters",
+        "Masters 1000",
+        "Masters Cup"
+    ])
