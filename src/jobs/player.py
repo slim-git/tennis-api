@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def fill_player_details(raw_player_name: str):
     try:
-        with next(get_session()) as session:
+        with get_session() as session:
             player.fill_player_details(session=session, player_raw_name=raw_player_name)
     except Exception as e:
         logger.error(f"Error: {e}")

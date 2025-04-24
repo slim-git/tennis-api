@@ -23,7 +23,7 @@ def load_matches_from_postgres(
         AND comment = 'Completed'"""
     query_params = {'from_date': from_date, 'to_date': to_date}
 
-    with next(get_session()) as session:
+    with get_session() as session:
         data = session.execute(
             text(query),
             query_params
@@ -39,7 +39,7 @@ def list_tournaments(circuit: Literal["atp", "wta"]):
     """
     List the tournaments of the circuit
     """
-    with next(get_session()) as session:
+    with get_session() as session:
         query = f"""
             SELECT DISTINCT
                 tournament as name,
