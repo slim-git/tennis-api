@@ -1,6 +1,6 @@
 from typing import Generator
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 from contextlib import contextmanager
 
 from dotenv import load_dotenv
@@ -15,7 +15,7 @@ def get_engine():
     return create_engine(database_url)
 
 @contextmanager
-def get_session() -> Generator:
+def get_session() -> Generator[Session, None, None]:
     """
     Get a connection to the Postgres database
     """
