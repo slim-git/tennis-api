@@ -39,7 +39,7 @@ from src.repository.common import get_session
 from src.service.match import insert_new_match
 
 from contextlib import asynccontextmanager
-import httpx
+from src.api_factory import create_forward_endpoint, get_remote_params
 
 load_dotenv()
 
@@ -59,9 +59,28 @@ TENNIS_ML_API = os.getenv("TENNIS_ML_API")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Other server that requests should be forwarded to
-    async with httpx.AsyncClient(base_url=TENNIS_ML_API) as client:
-        yield {'client': client}
+    endpoints = [
+        "run_experiment",
+        "predict",
+        "list_available_models"
+    ]
+
+    for endpoint in endpoints:
+        param_defs = await get_remote_params(base_url=TENNIS_ML_API,
+                                             endpoint=endpoint,
+                                             method='get')
+        forward_endpoint = create_forward_endpoint(base_url=TENNIS_ML_API,
+                                                   _endpoint=endpoint,
+                                                   param_defs=param_defs)
+
+        app.add_api_route(
+            path=f'/{endpoint}',
+            endpoint=forward_endpoint,
+            methods=["GET"],
+            name=f"Forward to remote {forward_endpoint.__name__}",
+        )
+    
+    yield
 
 # ------------------------------------------------------------------------------
 
@@ -97,45 +116,6 @@ def redirect_to_docs():
     Redirect to the API documentation.
     '''
     return RedirectResponse(url='/docs')
-
-@app.get("/run_experiment", tags=["model"], description="Schedule a run of the ML experiment")
-async def run_xp(request: Request):
-    """
-    Train the model
-    """
-    params = dict(request.query_params)
-
-    async with httpx.AsyncClient() as client:
-        response = await client.get(TENNIS_ML_API + "run_experiment", params=params)
-        return response.json()
-
-@app.get("/predict",
-         tags=["model"],
-         description="Predict the outcome of a tennis match",)
-async def make_prediction(request: Request):
-    """
-    Predict the matches
-    """
-    params = dict(request.query_params)
-
-    if not TENNIS_ML_API:
-        return {"message": "TENNIS_ML_API environment variable not set."}
-    
-    async with httpx.AsyncClient() as client:
-        response = await client.get(TENNIS_ML_API + "predict", params=params)
-        return response.json()
-
-@app.get("/list_available_models", tags=["model"], description="List the available models")
-async def list_available_models():
-    """
-    List the available models
-    """
-    if not TENNIS_ML_API:
-        return {"message": "TENNIS_ML_API environment variable not set."}
-    
-    async with httpx.AsyncClient() as client:
-        response = await client.get(TENNIS_ML_API + "list_available_models")
-        return response.json()
 
 # List all the tournament names and years
 @app.get("/tournament/names", tags=["tournament"], description="List all the tournament names and years", response_model=List[Dict])
