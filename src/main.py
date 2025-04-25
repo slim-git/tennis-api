@@ -1,8 +1,7 @@
 import os
-import joblib
 import logging
 import secrets
-from typing import Literal, Optional, Annotated, List, Dict
+from typing import Generator, Optional, Annotated, List, Dict
 from datetime import datetime
 from fastapi import (
     FastAPI,
@@ -13,7 +12,6 @@ from fastapi import (
     Depends
 )
 from fastapi.responses import RedirectResponse, JSONResponse
-from fastapi.background import BackgroundTasks
 from fastapi.security.api_key import APIKeyHeader
 from starlette.status import (
     HTTP_200_OK,
@@ -25,16 +23,8 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
-from mlflow.exceptions import RestException
 from sqlalchemy.exc import IntegrityError
 
-from src.model import (
-    run_experiment,
-    train_model_from_scratch,
-    predict,
-    list_registered_models,
-    load_model
-)
 from src.entity.match import (
     Match,
     RawMatch,
@@ -44,20 +34,37 @@ from src.entity.match import (
 from src.entity.player import (
     Player,
     PlayerApiDetail,
-    PlayerApiBase
 )
-from src.entity.tournament import Tournament
 from src.repository.common import get_session
-from src.repository.sql import list_tournaments as _list_tournaments
 from src.service.match import insert_new_match
+
+from contextlib import asynccontextmanager
+import httpx
+
+load_dotenv()
+
+# ------------------------------------------------------------------------------
 
 logging.basicConfig(level=logging.INFO,
                     handlers=[logging.StreamHandler()])
 logger = logging.getLogger(__name__)
 
+def provide_connection() -> Generator[Session, None, None]:
+    with get_session() as conn:
+        yield conn
+
 # ------------------------------------------------------------------------------
 
-load_dotenv()
+TENNIS_ML_API = os.getenv("TENNIS_ML_API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Other server that requests should be forwarded to
+    async with httpx.AsyncClient(base_url=TENNIS_ML_API) as client:
+        yield {'client': client}
+
+# ------------------------------------------------------------------------------
+
 FASTAPI_API_KEY = os.getenv("FASTAPI_API_KEY")
 safe_clients = ['127.0.0.1']
 
@@ -80,8 +87,8 @@ async def validate_api_key(request: Request, key: str = Security(api_key_header)
     return None
 
 app = FastAPI(dependencies=[Depends(validate_api_key)] if FASTAPI_API_KEY else None,
+              lifespan=lifespan if TENNIS_ML_API else None,
               title="Tennis Insights API")
-
 
 # ------------------------------------------------------------------------------
 @app.get("/", include_in_schema=False)
@@ -91,134 +98,49 @@ def redirect_to_docs():
     '''
     return RedirectResponse(url='/docs')
 
-@app.get("/train_model", tags=["model"], deprecated=True)
-async def train_model(
-    background_tasks: BackgroundTasks,
-    circuit: Literal["atp", "wta"] = 'atp',
-    from_date: str = "2024-01-01",
-    to_date: str = "2024-12-31"):
-    """
-    Train the model
-    """
-    # Check dates format
-    try:
-        datetime.strptime(from_date, "%Y-%m-%d")
-        datetime.strptime(to_date, "%Y-%m-%d")
-    except ValueError:
-        return {"message": "Invalid date format. Please use the format 'YYYY-MM-DD'"}
-    
-    background_tasks.add_task(
-        func=train_model_from_scratch,
-        circuit=circuit,
-        from_date=from_date,
-        to_date=to_date)
-    
-    return {"message": "Model training in progress"}
-
 @app.get("/run_experiment", tags=["model"], description="Schedule a run of the ML experiment")
-async def run_xp(
-    background_tasks: BackgroundTasks,
-    circuit: Literal["atp", "wta"] = 'atp',
-    from_date: str = "2024-01-01",
-    to_date: str = "2024-12-31"):
+async def run_xp(request: Request):
     """
     Train the model
     """
-    # Check dates format
-    try:
-        datetime.strptime(from_date, "%Y-%m-%d")
-        datetime.strptime(to_date, "%Y-%m-%d")
-    except ValueError:
-        return {"message": "Invalid date format. Please use the format 'YYYY-MM-DD'"}
-    
-    background_tasks.add_task(
-        func=run_experiment,
-        circuit=circuit,
-        from_date=from_date,
-        to_date=to_date)
-    
-    return {"message": "Experiment scheduled"}
+    params = dict(request.query_params)
 
-class ModelInput(BaseModel):
-    rank_player_1: int = Field(gt=0, default=1, description="The rank of the 1st player")
-    rank_player_2: int = Field(gt=0, default=100, description="The rank of the 2nd player")
-    points_player_1: int = Field(gt=0, default=4000, description="The number of points of the 1st player")
-    points_player_2: int = Field(gt=0, default=500, description="The number of points of the 2nd player")
-    court: Literal['Outdoor', 'Indoor'] = 'Outdoor'
-    surface: Literal['Grass', 'Carpet', 'Clay', 'Hard'] = 'Clay'
-    round: Literal['1st Round', '2nd Round', '3rd Round', '4th Round', 'Quarterfinals', 'Semifinals', 'The Final', 'Round Robin'] = '1st Round'
-    series: Literal['Grand Slam', 'Masters 1000', 'Masters', 'Masters Cup', 'ATP500', 'ATP250', 'International Gold', 'International'] = 'Grand Slam'
-    model: Optional[str] = 'LogisticRegression'
-    version: Optional[str] = 'latest'
-
-class ModelOutput(BaseModel):
-    result: int = Field(description="The prediction result. 1 if player 1 is expected to win, 0 otherwise.", json_schema_extra={"example": "1"})
-    prob: list[float] = Field(description="Probability of [defeat, victory] of player 1.", json_schema_extra={"example": "[0.15, 0.85]"})
+    async with httpx.AsyncClient() as client:
+        response = await client.get(TENNIS_ML_API + "run_experiment", params=params)
+        return response.json()
 
 @app.get("/predict",
          tags=["model"],
-         description="Predict the outcome of a tennis match",
-         response_model=ModelOutput)
-async def make_prediction(params: Annotated[ModelInput, Query()]):
+         description="Predict the outcome of a tennis match",)
+async def make_prediction(request: Request):
     """
     Predict the matches
     """
-    if not params.model:
-        # check the presence of 'model.pkl' file in data/
-        if not os.path.exists("/data/model.pkl"):
-            return {"message": "Model not trained. Please train the model first."}
+    params = dict(request.query_params)
+
+    if not TENNIS_ML_API:
+        return {"message": "TENNIS_ML_API environment variable not set."}
     
-        # Load the model
-        pipeline = joblib.load("/data/model.pkl")
-    else:
-        # Get the model info
-        try:
-            pipeline = load_model(params.model, params.version)
-        except RestException as e:
-            logger.error(e)
-
-            # Return HTTP error 404
-            return HTTPException(
-                status=HTTP_404_NOT_FOUND,
-                detail=f"Model {params.model} not found"
-            )
-
-    # Make the prediction
-    prediction = predict(
-        pipeline=pipeline,
-        rank_player_1=params.rank_player_1,
-        rank_player_2=params.rank_player_2,
-        points_player_1=params.points_player_1,
-        points_player_2=params.points_player_2,
-        court=params.court,
-        surface=params.surface,
-        round_stage=params.round,
-        series=params.series
-    )
-
-    logger.info(prediction)
-
-    return prediction
+    async with httpx.AsyncClient() as client:
+        response = await client.get(TENNIS_ML_API + "predict", params=params)
+        return response.json()
 
 @app.get("/list_available_models", tags=["model"], description="List the available models")
 async def list_available_models():
     """
     List the available models
     """
-    return list_registered_models()
-
-
-@app.get("/{circuit}/tournaments", tags=["tournament"], description="List the tournaments of the circuit", response_model=List[Tournament])
-async def list_tournaments(circuit: Literal["atp", "wta"]):
-    """
-    List the tournaments of the circuit
-    """
-    return _list_tournaments(circuit)
+    if not TENNIS_ML_API:
+        return {"message": "TENNIS_ML_API environment variable not set."}
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.get(TENNIS_ML_API + "list_available_models")
+        return response.json()
 
 # List all the tournament names and years
 @app.get("/tournament/names", tags=["tournament"], description="List all the tournament names and years", response_model=List[Dict])
 async def list_tournament_names(
-    session: Annotated[Session, Depends(get_session)]
+    session: Session = Depends(provide_connection)
 ):
     """
     List all the tournament names and first and last year of occurrence
@@ -238,7 +160,7 @@ async def list_tournament_names(
 
 @app.get("/references/courts", tags=["reference"], description="List all the courts")
 async def list_courts(
-    session: Annotated[Session, Depends(get_session)]
+    session: Session = Depends(provide_connection)
 ):
     """
     List all the courts
@@ -251,7 +173,7 @@ async def list_courts(
 
 @app.get("/references/surfaces", tags=["reference"], description="List all the surfaces")
 async def list_surfaces(
-    session: Annotated[Session, Depends(get_session)]
+    session: Session = Depends(provide_connection)
 ):
     """
     List all the surfaces
@@ -264,7 +186,7 @@ async def list_surfaces(
 
 @app.get("/references/series", tags=["reference"], description="List all the series")
 async def list_series(
-    session: Annotated[Session, Depends(get_session)]
+    session: Session = Depends(provide_connection)
 ):
     """
     List all the series
@@ -283,8 +205,8 @@ class ListPlayersInput(BaseModel):
 # Get a list of players
 @app.get("/players", tags=["player"], description="Get a list of players from the database", response_model=Dict[str|int, Optional[PlayerApiDetail]])
 async def list_players(
-    session: Annotated[Session, Depends(get_session)],
     params: Annotated[ListPlayersInput, Query()],
+    session: Session = Depends(provide_connection),
 ):
     """
     Get a list of players from the database
@@ -305,7 +227,7 @@ async def list_players(
 @app.get("/player/{player_id}", tags=["player"], description="Get a player from the database", response_model=PlayerApiDetail)
 async def get_player(
     player_id: int,
-    session: Annotated[Session, Depends(get_session)]
+    session: Session = Depends(provide_connection)
 ):
     """
     Get a player from the database
@@ -324,7 +246,7 @@ async def get_player(
 async def search_tournament_matches(
     name: str,
     year: int,
-    session: Annotated[Session, Depends(get_session)]
+    session: Session = Depends(provide_connection)
 ):
     """
     Get all the matches from a tournament
@@ -343,7 +265,7 @@ async def search_tournament_matches(
 @app.get("/match/{match_id}", tags=["match"], description="Get a match from the database", response_model=MatchApiDetail)
 async def get_match(
     match_id: int,
-    session: Annotated[Session, Depends(get_session)]
+    session: Session = Depends(provide_connection)
 ):
     """
     Get a match from the database
@@ -361,7 +283,7 @@ async def get_match(
 @app.post("/match/insert", tags=["match"], description="Insert a match into the database")
 async def insert_match(
     raw_match: RawMatch,
-    session: Annotated[Session, Depends(get_session)]
+    session: Session = Depends(provide_connection)
 ):
     """
     Insert a match into the database
@@ -389,7 +311,7 @@ async def insert_match(
 @app.post("/batch/match/insert", tags=["match"], description="Insert a batch of matches into the database")
 async def insert_batch_match(
     raw_matches: list[RawMatch],
-    session: Annotated[Session, Depends(get_session)]
+    session: Session = Depends(provide_connection)
 ):
     """
     Insert a batch of matches into the database
@@ -423,7 +345,7 @@ async def insert_batch_match(
 
 # ------------------------------------------------------------------------------
 @app.get("/check_health", tags=["general"], description="Check the health of the API")
-async def check_health(session: Annotated[Session, Depends(get_session)]):
+async def check_health(session: Session = Depends(provide_connection)):
     """
     Check all the services in the infrastructure are working
     """
