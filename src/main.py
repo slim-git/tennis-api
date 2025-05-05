@@ -63,6 +63,11 @@ TENNIS_ML_API = os.getenv("TENNIS_ML_API")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    if not TENNIS_ML_API:
+        yield
+        return
+    
+    # Create a forward endpoint for each endpoint in the remote API
     endpoints = [
         "run_experiment",
         "predict",
