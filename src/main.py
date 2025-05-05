@@ -36,7 +36,11 @@ from src.entity.player import (
     PlayerApiDetail,
 )
 from src.repository.common import get_session
-from src.service.match import insert_new_match
+from src.service.match import (
+    insert_new_match,
+    fetch_raw_data,
+    get_cleaned_data,
+)
 
 from contextlib import asynccontextmanager
 from src.api_factory import create_forward_endpoint, get_remote_params
@@ -263,7 +267,8 @@ async def get_match(
 @app.post("/match/insert", tags=["match"], description="Insert a match into the database")
 async def insert_match(
     raw_match: RawMatch,
-    session: Session = Depends(provide_connection)
+    session: Session = Depends(provide_connection),
+    on_conflict_do_nothing: bool = False,
 ):
     """
     Insert a match into the database
@@ -271,7 +276,8 @@ async def insert_match(
     try:
         match = insert_new_match(
             db=session,
-            raw_match=raw_match.model_dump(exclude_unset=True)
+            raw_match=raw_match.model_dump(exclude_unset=True),
+            on_conflict_do_nothing=on_conflict_do_nothing,
         )
     except IntegrityError as e:
         logger.error(f"Error inserting match: {e}")
@@ -282,15 +288,42 @@ async def insert_match(
 
     output = {
         "status": "ok",
-        "match_id": match.id,
+        "match_id": match.id if match else None,
     }
 
     return JSONResponse(content=output, status_code=HTTP_200_OK)
 
+@app.post("/match/ingest_year", tags=["match"], description="Ingest matches from tennis-data.co.uk for a given year")
+async def ingest_matches(
+    year: Optional[int] = None,
+    session: Session = Depends(provide_connection)
+):
+    """
+    Ingest matches from tennis-data.co.uk for a given year
+    """
+    fetch_raw_data(db=session, year=year)
+    # Get the cleaned data
+    df = get_cleaned_data(year=year)
+    
+    # Send requests of 100 matches
+    for i in range(0, len(df), 100):
+        start = i
+        end = start + 99
+        df_small = df.loc[start:end]
+        
+        response = await insert_batch_match(
+            raw_matches=df_small.to_dict(orient='records'),
+            on_conflict_do_nothing=True,
+            session=session
+        )
+
+        if response.status_code != HTTP_200_OK:
+            logger.error(f"Batch insert failed: {response.status_code} - {response.text}")
 
 @app.post("/batch/match/insert", tags=["match"], description="Insert a batch of matches into the database")
 async def insert_batch_match(
     raw_matches: list[RawMatch],
+    on_conflict_do_nothing: bool = False,
     session: Session = Depends(provide_connection)
 ):
     """
@@ -302,7 +335,8 @@ async def insert_batch_match(
         try:
             match = insert_new_match(
                 db=session,
-                raw_match=raw_match.model_dump(exclude_unset=True)
+                raw_match=raw_match.model_dump(exclude_unset=True) if isinstance(raw_match, RawMatch) else raw_match,
+                on_conflict_do_nothing=on_conflict_do_nothing,
             )
             matches.append(match)
         except IntegrityError as e:

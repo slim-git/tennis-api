@@ -1,7 +1,13 @@
+import os
+import logging
+import requests
+import numpy as np
+import pandas as pd
 from typing import Dict, List, Tuple
+from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-import logging
+
 from src.entity.match import Match
 from src.entity.odds import Odds
 from src.entity.player import Player
@@ -119,3 +125,52 @@ def _should_fetch_details(player: Player) -> bool:
     Check if player details should be fetched
     """
     return player.tennis_id is None or player.caracteristics is None
+
+def fetch_raw_data(db: Session, year: int) -> None:
+    """
+    Fetch data from tennis-data.co.uk for a given year and circuit (ATP or WTA) and save it to a file
+
+    Args:
+        year (int, optional): Year to retrieve. If None, fetch current year data.
+    """
+    current_year = datetime.now().year
+    
+    if not year:
+        year = current_year
+    
+    filename = f"{year}.xlsx"
+    file_path = f"./data/atp/{filename}"
+
+    # Check if the file already exists
+    if os.path.exists(file_path) and year != current_year:
+        logging.info(f"File {file_path} already exists. Skipping download.")
+        return
+
+    logging.info(f"Fetching data from tennis-data.co.uk for year {year}")
+
+    url = f"http://www.tennis-data.co.uk/{year}/{filename}"
+    
+    response = requests.get(url, stream=True)
+
+    # Check response status code
+    response.raise_for_status()
+
+    with open(file_path, "wb") as file:
+        for chunk in response.iter_content(chunk_size=8192):
+            file.write(chunk)
+        file.flush()
+
+    logging.info(f"Data fetched from {url} 👍 and saved to {file_path}")
+
+def get_cleaned_data(year: int) -> pd.DataFrame:
+    df = pd.read_csv(f'./data/atp/{year}.csv')
+    # Remove rows where LRank or WRank is NaN
+    df = df.dropna(subset=['LRank', 'WRank'])
+    df['Lsets'] = df['Lsets'].fillna(0)
+    df['Wsets'] = df['Wsets'].fillna(0)
+    # Replace NaN values with None
+    df = df.replace({np.nan: None})
+    # Replace NaN values with None
+    df = df.where(pd.notnull(df), None)
+
+    return df
