@@ -1,10 +1,15 @@
 from typing import Dict, List, Tuple
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+import logging
 from src.entity.match import Match
 from src.entity.odds import Odds
 from src.entity.player import Player
 from src.repository import match_repo
 from src.jobs.player import schedule_player_details
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 def get_match(raw_match: Dict) -> Match:
     """
@@ -79,12 +84,26 @@ def parse_raw_matches(raw_matches: Dict) -> List[Match]:
 
     return matches
 
-def insert_new_match(db: Session, raw_match: Dict) -> Match:
+def insert_new_match(db: Session, raw_match: Dict, on_conflict_do_nothing: bool = False) -> Match:
     """
     Insert a new match into the database
     """
     match = parse_raw_match(raw_match)
-    match_repo.insert_match(db, match)
+
+    try:
+        match_repo.insert_match(db, match)
+    except IntegrityError as e:
+        if on_conflict_do_nothing:
+            logging.warning(f"Match already exists: {e}")
+            return match
+        else:
+            # Log the error and re-raise
+            logging.error(f"Error inserting match: {e}")
+            raise
+    except Exception as e:
+            # Log the error and re-raise
+            logging.error(f"Error inserting match: {e}")
+            raise
 
     # Schedule tasks to fetch player details
     if _should_fetch_details(match.winner):

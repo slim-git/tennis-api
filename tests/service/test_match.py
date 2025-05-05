@@ -1,4 +1,5 @@
 from typing import Dict, List
+import pytest
 from src.service.match import (
     parse_raw_match,
     parse_raw_matches,
@@ -195,3 +196,67 @@ def test_insert_new_match(db_session, super_joueur):
     assert match.loser.name == "Unknown A."
     assert match.loser.caracteristics is None
     assert len(match.odds) > 0
+
+def test_insert_existing_match(db_session, super_joueur):
+    """
+    Test inserting an already existing match into the database
+    """
+    raw_match = {
+        "Date": "2023-04-01",
+        "Comment": "Walkover",
+        "WRank": 1,
+        "WPts": 3000,
+        "LRank": 2000,
+        "LPts": 2900,
+        "Tournament": "Wimbledon",
+        "Series": "Grand Slam",
+        "Surface": "Grass",
+        "Court": "Outdoor",
+        "Round": "Semifinals",
+        "Location": "London",
+        "Winner": super_joueur.name,
+        "Loser": "Unknown A.",
+        "B365W": 1.5,
+        "B365L": 2.6
+    }
+
+    match = insert_new_match(db=db_session, raw_match=raw_match)
+
+    assert match.id is not None
+
+    # Attempt to insert the same match again
+    with pytest.raises(Exception):
+        insert_new_match(db=db_session, raw_match=raw_match)  # Assuming this raises an IntegrityError
+
+def test_insert_existing_match_no_error(db_session, super_joueur):
+    """
+    Test inserting an already existing match into the database
+    """
+    raw_match = {
+        "Date": "2023-04-01",
+        "Comment": "Walkover",
+        "WRank": 1,
+        "WPts": 3000,
+        "LRank": 2000,
+        "LPts": 2900,
+        "Tournament": "Wimbledon",
+        "Series": "Grand Slam",
+        "Surface": "Grass",
+        "Court": "Outdoor",
+        "Round": "Semifinals",
+        "Location": "London",
+        "Winner": super_joueur.name,
+        "Loser": "Unknown A.",
+        "B365W": 1.5,
+        "B365L": 2.6
+    }
+
+    match = insert_new_match(db=db_session, raw_match=raw_match)
+
+    assert match.id is not None
+
+    # Attempt to insert the same match again
+    output = insert_new_match(db=db_session, raw_match=raw_match, on_conflict_do_nothing=True) # Assuming this raises nothing
+
+    assert output is not None
+    assert output.id is None
