@@ -20,7 +20,7 @@ def schedule_player_details(raw_player_name: str):
     """
     Schedule the job to fill player details
     """
-    with next(get_redis_connection()) as r:
+    with get_redis_connection() as r:
         scheduler = Scheduler(connection=r)
         # Check if the job is already scheduled
         for job in scheduler.get_jobs():
