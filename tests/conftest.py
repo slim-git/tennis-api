@@ -9,7 +9,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from responses.matchers import json_params_matcher
 from fastapi.testclient import TestClient
-from src.main import app
+from src.main import app, provide_connection
 from src.repository.common import get_session
 
 from src.entity import Base
@@ -32,9 +32,10 @@ def client(db_session):
     # Override the get_session dependency to use the test database session
     def override_get_session():
         yield db_session
-    
+
     # Override the dependency in the FastAPI app
     app.dependency_overrides[get_session] = override_get_session
+    app.dependency_overrides[provide_connection] = override_get_session
 
     return TestClient(app)
 

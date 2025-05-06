@@ -304,6 +304,7 @@ async def ingest_matches(year: Optional[int] = None):
     """
     job = schedule_matches_ingestion(year=year)
 
+    
     return {"job_id": job.get_id(), "job_status": job.get_status()}
 
 @app.post("/batch/match/insert", tags=["match"], description="Insert a batch of matches into the database")
