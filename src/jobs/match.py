@@ -20,6 +20,11 @@ def ingestion_job(year: Optional[int] = None):
     """
     Ingest matches for a specific year
     """
+    current_year = datetime.now().year
+    
+    if not year:
+        year = current_year
+    
     try:
         with get_session() as session:
             fetch_raw_data(year=year)
@@ -41,11 +46,11 @@ def ingestion_job(year: Optional[int] = None):
         logger.error(f"Error: {e}")
         raise
 
-def schedule_matches_ingestion(year: int) -> Job:
+def schedule_matches_ingestion(year: Optional[int] = None) -> Job:
     """
     Schedule the job to ingest matches for a specific year
     """
-    job_id = f'matches_ingestion_{year}'
+    job_id = f'matches_ingestion_{year if year else "current"}'
 
     if job := is_job_scheduled_queued_or_started(job_id=job_id):
         return job
@@ -53,14 +58,21 @@ def schedule_matches_ingestion(year: int) -> Job:
     with get_redis_connection() as r:
         scheduler = Scheduler(connection=r)
 
+        job_params = {
+            'scheduled_time': datetime.now(),
+            'kwargs': {'year': year},
+            'id': job_id,  # Ensures deduplication of jobs
+            'timeout': 7200,  # Timeout for the job
+            'func': ingestion_job,
+        }
+
+        # For the current year data, we want to run the job every week
+        if year is None:
+            job_params['interval'] = 7 * 86400
+            job_params['repeat'] = None
+
         # Schedule the job to run immediately
-        logger.info(f"Scheduling job for year: {year}")
-        job = scheduler.schedule(
-            scheduled_time=datetime.utcnow(),
-            func=ingestion_job,
-            kwargs={'year': year},
-            id=job_id, # Ensures deduplication of jobs
-            timeout=7200,  # Timeout for the job
-        )
+        logger.info(f"Scheduling job for year: {year if year else 'current'}")
+        job = scheduler.schedule(**job_params)
 
         return job
