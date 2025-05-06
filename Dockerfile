@@ -1,28 +1,40 @@
 # ---- Build stage ----
-FROM python:3.11-slim-bullseye
+FROM python:3.11-slim-bookworm as builder
 
-COPY requirements.txt .
-COPY requirements-dev.txt .
+WORKDIR /app
+
+COPY requirements.txt requirements.txt
+COPY requirements-dev.txt requirements-dev.txt
     
 ARG TEST
 
 # Installer les dépendances
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
-    if [ "$TEST" = "true" ]; then \
-      pip install --no-cache-dir -r requirements-dev.txt; \
-    fi
+  pip install --no-cache-dir -r requirements.txt && \
+  if [ "$TEST" = "true" ]; then \
+    pip install --no-cache-dir -r requirements-dev.txt; \
+  fi
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    curl \
-    libpq-dev \
-    postgresql \
-    postgresql-contrib \
-    gcc \
-    g++ \
-    make && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  build-essential \
+  libpq-dev \
+  curl && \
+  pip install --upgrade pip && \
+  pip install --no-cache-dir -r requirements.txt && \
+  if [ "$TEST" = "true" ]; then \
+    pip install --no-cache-dir -r requirements-dev.txt; \
+  fi && \
+  apt-get remove -y build-essential && \
+  apt-get autoremove -y && \
+  rm -rf /var/lib/apt/lists/*
+
+# ---- Runtime stage ----
+FROM python:3.11-slim-bookworm
+
+WORKDIR /app
+
+COPY --from=builder /usr/local/lib/python3.11 /usr/local/lib/python3.11
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copier le code
 COPY ./entrypoint.sh /tmp/entrypoint.sh
