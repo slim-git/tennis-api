@@ -31,6 +31,8 @@ COPY ./tests /app/tests
 COPY ./pytest.ini /app/pytest.ini
 COPY ./.env.test /app/.env.test
 
+RUN mkdir -p /app/data/atp
+
 WORKDIR /app
 
 # Pour que les imports soient résolus depuis /app

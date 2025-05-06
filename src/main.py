@@ -3,6 +3,7 @@ import logging
 import secrets
 from typing import Generator, Optional, Annotated, List, Dict
 from datetime import datetime
+from contextlib import asynccontextmanager
 from fastapi import (
     FastAPI,
     Request,
@@ -25,6 +26,7 @@ from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from sqlalchemy.exc import IntegrityError
 
+from src.api_factory import create_forward_endpoint, get_remote_params
 from src.entity.match import (
     Match,
     RawMatch,
@@ -35,15 +37,12 @@ from src.entity.player import (
     Player,
     PlayerApiDetail,
 )
+from src.jobs.match import schedule_matches_ingestion
 from src.repository.common import get_session
 from src.service.match import (
     insert_new_match,
-    fetch_raw_data,
-    get_cleaned_data,
+    insert_batch_matches,
 )
-
-from contextlib import asynccontextmanager
-from src.api_factory import create_forward_endpoint, get_remote_params
 
 load_dotenv()
 
@@ -299,31 +298,13 @@ async def insert_match(
     return JSONResponse(content=output, status_code=HTTP_200_OK)
 
 @app.post("/match/ingest_year", tags=["match"], description="Ingest matches from tennis-data.co.uk for a given year")
-async def ingest_matches(
-    year: Optional[int] = None,
-    session: Session = Depends(provide_connection)
-):
+async def ingest_matches(year: Optional[int] = None):
     """
     Ingest matches from tennis-data.co.uk for a given year
     """
-    fetch_raw_data(db=session, year=year)
-    # Get the cleaned data
-    df = get_cleaned_data(year=year)
-    
-    # Send requests of 100 matches
-    for i in range(0, len(df), 100):
-        start = i
-        end = start + 99
-        df_small = df.loc[start:end]
-        
-        response = await insert_batch_match(
-            raw_matches=df_small.to_dict(orient='records'),
-            on_conflict_do_nothing=True,
-            session=session
-        )
+    job = schedule_matches_ingestion(year=year)
 
-        if response.status_code != HTTP_200_OK:
-            logger.error(f"Batch insert failed: {response.status_code} - {response.text}")
+    return {"job_id": job.get_id(), "job_status": job.get_status()}
 
 @app.post("/batch/match/insert", tags=["match"], description="Insert a batch of matches into the database")
 async def insert_batch_match(
@@ -334,19 +315,12 @@ async def insert_batch_match(
     """
     Insert a batch of matches into the database
     """
-    matches = []
-    nb_errors = 0
-    for raw_match in raw_matches:
-        try:
-            match = insert_new_match(
-                db=session,
-                raw_match=raw_match.model_dump(exclude_unset=True) if isinstance(raw_match, RawMatch) else raw_match,
-                on_conflict_do_nothing=on_conflict_do_nothing,
-            )
-            matches.append(match)
-        except IntegrityError as e:
-            nb_errors += 1
-            logger.error(f"Error inserting match: {e}")
+    result = insert_batch_matches(db=session,
+                                  raw_matches=raw_matches,
+                                  on_conflict_do_nothing=on_conflict_do_nothing)
+
+    matches = result['matches']
+    nb_errors = result['nb_errors']
 
     logger.info(f"Number of matches inserted: {len(matches)}")
     if nb_errors > 0:

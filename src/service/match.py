@@ -3,12 +3,12 @@ import logging
 import requests
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from src.entity.match import Match
+from src.entity.match import Match, RawMatch
 from src.entity.odds import Odds
 from src.entity.player import Player
 from src.repository import match_repo
@@ -100,16 +100,19 @@ def insert_new_match(db: Session, raw_match: Dict, on_conflict_do_nothing: bool 
         match_repo.insert_match(db, match)
     except IntegrityError as e:
         if on_conflict_do_nothing:
-            logging.warning(f"Match already exists: {e}")
+            logging.debug(f"Match already exists: {match.date}")
+            db.rollback()
             return match
         else:
             # Log the error and re-raise
             logging.error(f"Error inserting match: {e}")
+            db.rollback()
             raise
     except Exception as e:
-            # Log the error and re-raise
-            logging.error(f"Error inserting match: {e}")
-            raise
+        # Log the error and re-raise
+        logging.error(f"Error inserting match: {e}")
+        db.rollback()
+        raise
 
     # Schedule tasks to fetch player details
     if _should_fetch_details(match.winner):
@@ -120,13 +123,35 @@ def insert_new_match(db: Session, raw_match: Dict, on_conflict_do_nothing: bool 
 
     return match
 
+def insert_batch_matches(db: Session, raw_matches: List[Dict], on_conflict_do_nothing: bool = False) -> Dict:
+    matches = []
+    nb_errors = 0
+    for raw_match in raw_matches:
+        try:
+            match = insert_new_match(
+                db=db,
+                raw_match=raw_match.model_dump(exclude_unset=True) if isinstance(raw_match, RawMatch) else raw_match,
+                on_conflict_do_nothing=on_conflict_do_nothing,
+            )
+            matches.append(match)
+        except IntegrityError as e:
+            nb_errors += 1
+            logger.error(f"Error inserting match: {e}")
+
+    logger.info(f"Number of matches inserted: {len(matches)}")
+
+    if nb_errors > 0:
+        logger.warning(f"Number of errors: {nb_errors}")
+    
+    return {'matches': matches, 'nb_errors': nb_errors}
+
 def _should_fetch_details(player: Player) -> bool:
     """
     Check if player details should be fetched
     """
     return player.tennis_id is None or player.caracteristics is None
 
-def fetch_raw_data(db: Session, year: int) -> None:
+def fetch_raw_data(year: Optional[int] = None) -> None:
     """
     Fetch data from tennis-data.co.uk for a given year and circuit (ATP or WTA) and save it to a file
 
@@ -162,15 +187,23 @@ def fetch_raw_data(db: Session, year: int) -> None:
 
     logging.info(f"Data fetched from {url} 👍 and saved to {file_path}")
 
-def get_cleaned_data(year: int) -> pd.DataFrame:
-    df = pd.read_csv(f'./data/atp/{year}.csv')
+def get_cleaned_data(year: Optional[int]) -> pd.DataFrame:
+    if not year:
+        year = datetime.now().year
+    
+    df = pd.read_excel(f'./data/atp/{year}.xlsx')
+
     # Remove rows where LRank or WRank is NaN
     df = df.dropna(subset=['LRank', 'WRank'])
     df['Lsets'] = df['Lsets'].fillna(0)
     df['Wsets'] = df['Wsets'].fillna(0)
+
+    # Strip whitespace from 'winner' and 'loser' columns
+    df['Winner'] = df['Winner'].str.strip()
+    df['Loser'] = df['Loser'].str.strip()
+
     # Replace NaN values with None
     df = df.replace({np.nan: None})
-    # Replace NaN values with None
     df = df.where(pd.notnull(df), None)
 
     return df
