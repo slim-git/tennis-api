@@ -62,8 +62,9 @@ def schedule_matches_ingestion(year: Optional[int] = None) -> Job:
             'scheduled_time': datetime.now(),
             'kwargs': {'year': year},
             'id': job_id,  # Ensures deduplication of jobs
-            'timeout': 7200,  # Timeout for the job
+            'timeout': 2 * 3600,  # Timeout for the job
             'func': ingestion_job,
+            'result_ttl': 7 * 86400,  # Result TTL for the job
         }
 
         # For the current year data, we want to run the job every week
