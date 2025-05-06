@@ -133,7 +133,9 @@ def insert_batch_matches(db: Session, raw_matches: List[Dict], on_conflict_do_no
                 raw_match=raw_match.model_dump(exclude_unset=True) if isinstance(raw_match, RawMatch) else raw_match,
                 on_conflict_do_nothing=on_conflict_do_nothing,
             )
-            matches.append(match)
+
+            if match.id is not None:
+                matches.append(match)
         except IntegrityError as e:
             nb_errors += 1
             logger.error(f"Error inserting match: {e}")
