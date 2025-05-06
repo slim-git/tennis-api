@@ -18,7 +18,10 @@ RUN pip install --upgrade pip && \
 RUN apt-get update && apt-get install -y --no-install-recommends \
   build-essential \
   libpq-dev \
-  curl && \
+  curl \
+  libpq-dev \
+  postgresql \
+  postgresql-contrib && \
   pip install --upgrade pip && \
   pip install --no-cache-dir -r requirements.txt && \
   if [ "$TEST" = "true" ]; then \
@@ -35,6 +38,12 @@ WORKDIR /app
 
 COPY --from=builder /usr/local/lib/python3.11 /usr/local/lib/python3.11
 COPY --from=builder /usr/local/bin /usr/local/bin
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev \
+    postgresql \
+    postgresql-contrib && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copier le code
 COPY ./entrypoint.sh /tmp/entrypoint.sh
