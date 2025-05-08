@@ -1,6 +1,7 @@
 from fastapi import Query
 from typing import Dict, Literal
 import httpx
+import os
 
 def extract_type(p):
     schema = p.get("schema", {})
@@ -27,7 +28,11 @@ async def get_remote_params(base_url: str,
                             endpoint: str,
                             method: str = 'get'):
     async with httpx.AsyncClient() as client:
-        response = await client.get(f"{base_url}openapi.json")
+        headers = {}
+        if TENNIS_ML_API_KEY := os.getenv('TENNIS_ML_API_KEY'):
+            headers["Authorization"] = TENNIS_ML_API_KEY
+
+        response = await client.get(f"{base_url}openapi.json", headers=headers)
         spec = response.json()
     
     # Extraction of the parameters from the OpenAPI spec
@@ -53,10 +58,15 @@ def create_forward_endpoint(base_url: str, _endpoint: str, param_defs: Dict):
     # Dynamic endpoint creation
     def endpoint_factory():
         async def endpoint(**kwargs):
+            headers = {}
+            if TENNIS_ML_API_KEY := os.getenv('TENNIS_ML_API_KEY'):
+                headers["Authorization"] = TENNIS_ML_API_KEY
+
             async with httpx.AsyncClient() as client:
                 response = await client.get(
                     f"{base_url}{_endpoint}",
-                    params=kwargs
+                    params=kwargs,
+                    headers=headers,
                 )
                 return response.json()
         return endpoint
