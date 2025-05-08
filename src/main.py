@@ -38,6 +38,7 @@ from src.entity.player import (
     PlayerApiDetail,
 )
 from src.jobs.match import schedule_matches_ingestion
+from src.jobs.views import schedule_refresh
 from src.repository.common import get_session
 from src.service.match import (
     insert_new_match,
@@ -55,6 +56,13 @@ logger = logging.getLogger(__name__)
 def provide_connection() -> Generator[Session, None, None]:
     with get_session() as conn:
         yield conn
+
+# ------------------------------------------------------------------------------
+
+# Ensure all the necessary jobs are scheduled
+if os.getenv("REDIS_URL"):
+    schedule_refresh()
+    schedule_matches_ingestion(year=None)
 
 # ------------------------------------------------------------------------------
 
