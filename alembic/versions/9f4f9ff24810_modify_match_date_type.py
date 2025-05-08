@@ -26,7 +26,6 @@ def upgrade() -> None:
     views = conn.execute(sa.text("""
         SELECT schemaname, matviewname
         FROM pg_matviews
-        WHERE schemaname = 'data'
     """)).fetchall()
     
     # Step 2 - For each view, get the definition and indexes
@@ -93,7 +92,6 @@ def downgrade() -> None:
     views = conn.execute(sa.text("""
         SELECT schemaname, matviewname
         FROM pg_matviews
-        WHERE schemaname = 'data'
     """)).fetchall()
     
     # Step 2 - For each view, get the definition and indexes
