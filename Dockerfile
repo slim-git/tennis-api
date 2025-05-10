@@ -9,17 +9,10 @@ COPY requirements-dev.txt requirements-dev.txt
 ARG TEST
 
 # Installer les dépendances
-RUN pip install --upgrade pip && \
-  pip install --no-cache-dir -r requirements.txt && \
-  if [ "$TEST" = "true" ]; then \
-    pip install --no-cache-dir -r requirements-dev.txt; \
-  fi
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
   build-essential \
   libpq-dev \
   curl \
-  libpq-dev \
   postgresql \
   postgresql-contrib && \
   pip install --upgrade pip && \
