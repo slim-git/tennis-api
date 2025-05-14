@@ -41,6 +41,7 @@ async def get_remote_params(base_url: str,
     params = method_def.get("parameters", [])
 
     return {
+        "found": bool(path_def),
         "general": {
             "description": method_def.get("description", ""),
             "summary": method_def.get("summary", ""),

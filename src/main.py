@@ -85,6 +85,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         endpoint_def = await get_remote_params(base_url=TENNIS_ML_API,
                                                endpoint=endpoint,
                                                method='get')
+        
+        if not endpoint_def["found"]:
+            logger.warning(f"Endpoint {endpoint} not found in the remote API")
+            continue
+
+        # Create a forward endpoint for the remote API
         forward_endpoint = create_forward_endpoint(base_url=TENNIS_ML_API,
                                                    _endpoint=endpoint,
                                                    param_defs=endpoint_def["params"])
