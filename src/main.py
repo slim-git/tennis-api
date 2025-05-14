@@ -1,7 +1,7 @@
 import os
 import logging
 import secrets
-from typing import Generator, Optional, Annotated, List, Dict
+from typing import Generator, Optional, Annotated, List, Dict, AsyncGenerator
 from datetime import datetime
 from contextlib import asynccontextmanager
 from fastapi import (
@@ -69,7 +69,7 @@ if os.getenv("REDIS_URL"):
 TENNIS_ML_API = os.getenv("TENNIS_ML_API")
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     if not TENNIS_ML_API:
         yield
         return
@@ -105,7 +105,7 @@ safe_clients = ['127.0.0.1']
 
 api_key_header = APIKeyHeader(name='Authorization', auto_error=False)
 
-async def validate_api_key(request: Request, key: str = Security(api_key_header)):
+async def validate_api_key(request: Request, key: str = Security(api_key_header)) -> None:
     '''
     Check if the API key is valid
 
