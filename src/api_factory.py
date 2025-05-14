@@ -26,7 +26,7 @@ def get_param_metadata(p):
 
 async def get_remote_params(base_url: str,
                             endpoint: str,
-                            method: str = 'get'):
+                            method: str = 'get') -> Dict:
     async with httpx.AsyncClient() as client:
         headers = {}
         if TENNIS_ML_API_KEY := os.getenv('TENNIS_ML_API_KEY'):
@@ -40,10 +40,17 @@ async def get_remote_params(base_url: str,
     method_def = path_def.get(method, {})
     params = method_def.get("parameters", [])
 
-    return [
-        get_param_metadata(p)
-        for p in params if p["in"] == "query"
-    ]
+    return {
+        "general": {
+            "description": method_def.get("description", ""),
+            "summary": method_def.get("summary", ""),
+            "tags": method_def.get("tags", []),
+        },
+        "params": [
+            get_param_metadata(p)
+            for p in params if p["in"] == "query"
+        ]
+    }
 
 def openapi_type_to_python(t: str):
     return {

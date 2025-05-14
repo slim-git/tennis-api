@@ -82,18 +82,21 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     ]
 
     for endpoint in endpoints:
-        param_defs = await get_remote_params(base_url=TENNIS_ML_API,
-                                             endpoint=endpoint,
-                                             method='get')
+        endpoint_def = await get_remote_params(base_url=TENNIS_ML_API,
+                                               endpoint=endpoint,
+                                               method='get')
         forward_endpoint = create_forward_endpoint(base_url=TENNIS_ML_API,
                                                    _endpoint=endpoint,
-                                                   param_defs=param_defs)
+                                                   param_defs=endpoint_def["params"])
 
         app.add_api_route(
             path=f'/{endpoint}',
             endpoint=forward_endpoint,
             methods=["GET"],
             name=f"Forward to remote {forward_endpoint.__name__}",
+            tags=endpoint_def["general"]["tags"],
+            description=endpoint_def["general"]["description"],
+            summary=endpoint_def["general"]["summary"],
         )
     
     yield
