@@ -76,6 +76,8 @@ def create_forward_endpoint(base_url: str, _endpoint: str, param_defs: Dict):
                     params=kwargs,
                     headers=headers,
                 )
+                response.raise_for_status()
+                
                 return response.json()
         return endpoint
 
